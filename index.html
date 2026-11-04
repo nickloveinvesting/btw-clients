@@ -839,19 +839,41 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 @media (max-width: 640px) {
   .ov-head .tools { width: 100%; } .seg { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); } .seg button { min-height: 36px; }
   #ov-period { grid-template-columns: repeat(4, minmax(0, 1fr)); } #ov-period button { padding: 6px 6px; }
+  #at-prog { grid-template-columns: repeat(4, minmax(0, 1fr)); } #at-prog button { padding: 6px 4px; font-size: 12px; }
+  .nl-short { display: inline; } .nav .nl-long { display: none; }
   .ov-menu { left: 0; right: 0; width: auto; }
   .ov-kpis { gap: 10px; } .ov-kpi { padding: 14px; } .ov-val { font-size: 26px; } .ov-spark { width: 56px; right: 12px; top: 14px; }
   .ov-ks { font-size: 12px; } .ov-delta { font-size: 11.5px; }
   .ov-body { padding: 4px 14px 14px; }
   .ov-cols { min-height: 190px; gap: 3px; }
   .ov-colwrap .av { display: none; }
-  .navgroup.views { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .navgroup.views { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; }
   .nav { font-size: 11px !important; }
   .nl-long { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ov-anim * { animation: none !important; } }
-#view-deals { display: flex; flex-direction: column; gap: 14px; }
-#view-deals[hidden] { display: none; }
+#view-deals, #view-attendance { display: flex; flex-direction: column; gap: 14px; }
+#view-deals[hidden], #view-attendance[hidden] { display: none; }
+.nl-short { display: none; }
+#att-list table { width: 100%; border-collapse: collapse; }
+#att-list td { white-space: nowrap; }
+#att-list th { white-space: normal; }
+#att-list td.c-who small { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#att-list td.c-who { white-space: normal; min-width: 170px; }
+@media (max-width: 1300px) { #att-list td.c-who .av { display: none; } #att-list td.c-who small { max-width: 170px; } }
+#att-list td.c-who b { display: block; font-weight: 600; }
+#att-list td small { display: block; color: var(--muted); font-size: 12px; }
+#att-list .num { font-variant-numeric: tabular-nums; text-align: right; }
+#att-list td.num.zero { color: var(--muted); }
+#att-list tr.detail td { white-space: normal; background: var(--soft); padding: 14px; }
+.dl-tag.legacy { background: color-mix(in srgb, var(--lime) 30%, transparent); }
+.dl-tag.guest, .dl-tag.lead { background: var(--soft); box-shadow: inset 0 0 0 1px var(--line); }
+.at-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
+.at-chips li { padding: 5px 9px; border-radius: 8px; background: var(--panel); font-size: 12.5px; }
+.at-chips li b { font-weight: 600; } .at-chips li span { color: var(--muted); }
+.at-prog3 { display: flex; flex-direction: column; gap: 10px; }
+.at-prog3 .ov-gs b { font-size: 18px; }
+.ov-coln.at-ser { font-size: 11px; color: var(--muted); margin-top: -4px; }
 .dl-tools { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .dl-row1 { grid-template-columns: minmax(0, 1fr) 380px; }
 .dl-row2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -894,6 +916,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       <a class="nav" href="#grade" data-view="grade" id="nav-grade"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Grading<span class="nl-long"> queue</span></span><span class="ncount" id="n-grade">0</span></a>
       <a class="nav" href="#members" data-view="members" id="nav-members"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Members<span class="ncount" id="n-members">0</span></a>
       <a class="nav" href="#deals" data-view="deals" id="nav-deals"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Deals<span class="ncount" id="n-deals">0</span></a>
+      <a class="nav" href="#attendance" data-view="attendance" id="nav-attendance"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg><span><span class="nl-long">Attendance</span><span class="nl-short">Calls</span></span><span class="ncount" id="n-attendance"></span></a>
       <a class="nav" href="#lessons" data-view="lessons" id="nav-lessons"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Lessons<span class="ncount" id="n-lessons">0</span></a>
       <a class="nav" href="#uploads" data-view="uploads" id="nav-uploads"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Uploads<span class="ncount" id="n-uploads">0</span></a>
     </nav>
@@ -1123,6 +1146,48 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       </section>
     </section>
 
+    <section class="view" id="view-attendance" aria-labelledby="at-h" hidden>
+      <div class="vhead ov-head">
+        <div>
+          <h1 id="at-h">Attendance</h1>
+          <p id="at-sub">Loading Zoom attendance…</p>
+        </div>
+        <div class="tools dl-tools">
+          <div class="seg" role="group" aria-label="Program" id="at-prog">
+            <button type="button" data-g="all" aria-pressed="true">All calls</button>
+            <button type="button" data-g="btw" aria-pressed="false">Built to Win</button>
+            <button type="button" data-g="mastermind" aria-pressed="false">Mastermind</button>
+            <button type="button" data-g="ignite" aria-pressed="false">IGNITE</button>
+          </div>
+          <div class="seg" role="group" aria-label="Period" id="at-period">
+            <button type="button" data-p="7" aria-pressed="false">7 days</button>
+            <button type="button" data-p="30" aria-pressed="true">30 days</button>
+            <button type="button" data-p="0" aria-pressed="false">All time</button>
+          </div>
+        </div>
+      </div>
+      <div class="ov-kpis" id="at-kpis" aria-label="Attendance totals"></div>
+      <div class="ov-row dl-row1">
+        <section class="card" aria-labelledby="at-calls-h">
+          <div class="chead"><div><h2 id="at-calls-h">People on each call</h2><p id="at-calls-sub">Everyone on the Zoom, team left out</p></div><div class="ov-big"><span id="at-avg">0</span><small>average per call</small></div></div>
+          <div class="ov-body" id="at-calls"></div>
+        </section>
+        <section class="card" aria-labelledby="at-top-h">
+          <div class="chead"><div><h2 id="at-top-h">Most consistent</h2><p id="at-top-sub">People on the most calls</p></div></div>
+          <div class="ov-body" id="at-top"></div>
+        </section>
+      </div>
+      <div class="ov-row dl-row2">
+        <section class="card" aria-labelledby="at-progs-h"><div class="chead"><div><h2 id="at-progs-h">By program</h2><p id="at-progs-sub">Calls and turnout in this period</p></div></div><div class="ov-body" id="at-progs"></div></section>
+        <section class="card" aria-labelledby="at-who-h"><div class="chead"><div><h2 id="at-who-h">Who’s coming</h2><p>Unique people, by who they are in GoHighLevel</p></div></div><div class="ov-body" id="at-who"></div></section>
+        <section class="card" aria-labelledby="at-slip-h"><div class="chead"><div><h2 id="at-slip-h">Slipping away</h2><p>Came to 3+ calls, nothing in the last 14 days</p></div></div><div class="ov-body" id="at-slip"></div></section>
+      </div>
+      <section class="card dl-tablecard" aria-labelledby="at-list-h">
+        <div class="chead"><div><h2 id="at-list-h">Everyone who attended</h2><p id="at-list-sub">Open a person to see every call they joined.</p></div><input type="search" id="at-search" placeholder="Filter name or email" aria-label="Filter people"></div>
+        <div class="tablebox" id="att-list"><div class="empty">Loading attendance…</div></div>
+      </section>
+    </section>
+
     <section class="view" id="view-lessons" aria-labelledby="lessons-h" hidden>
       <div class="vhead">
         <div>
@@ -1200,8 +1265,9 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(), onb: [], deals: [], onbOk: false, dealsOk: false, att: null, attOk: false, attIdx: null, extErr: {},
     err: {}, drafts: {}, opened: new Set(), mirror: new Map(), sel: null, openMember: null, openGrade: null,
     mSearch: '', uSearch: '', uFilter: '',
-    sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' }, deals: { key: 'at', dir: 'desc' } },
+    sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' }, deals: { key: 'at', dir: 'desc' }, att: { key: 'total', dir: 'desc' } },
     dlPeriod: 0, dlWho: 'all', dlSearch: '', openDeal: null, dlAnimKey: '',
+    atPeriod: 30, atProg: 'all', atSearch: '', openPerson: null, atAnimKey: '',
   };
 
   // ---------- helpers ----------
@@ -1634,58 +1700,94 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   const nrm = (v) => String(v || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[\u2019'`]/g, ' ')
     .replace(/[0-9]/g, ' ').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
   const etDay = (t) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  // Zoom display names that say nothing about who joined.
+  const DEVICE = /^(iphone|ipad|android|zoom user|owner|user|guest|admin|unknown|samsung|galaxy|my iphone)$|\b(iphone|ipad|phone|galaxy)$/;
   function attIndex() {
     if (!S.attOk || !S.att) return null;
     if (S.attIdx && S.attIdx.roster === S.roster) return S.attIdx;
     const ids = new Set(S.roster.map((r) => r.contactId));
-    const byEmail = new Map(), byFull = new Map(), byFL = new Map();
     const add = (map, k, id) => { if (k) map.set(k, map.has(k) && map.get(k) !== id ? '' : id); };
-    for (const r of S.roster) {
-      if (r.email) byEmail.set(r.email.toLowerCase(), r.contactId);
-      const t = nrm(r.name).split(' ').filter(Boolean);
-      add(byFull, t.join(' '), r.contactId);
-      if (t.length >= 2) add(byFL, t[0] + '|' + t[t.length - 1], r.contactId);
-    }
+    const index = (list) => {
+      const byEmail = new Map(), byFull = new Map(), byFL = new Map();
+      for (const x of list) {
+        if (x.email) byEmail.set(x.email.toLowerCase(), x.id);
+        const t = nrm(x.name).split(' ').filter(Boolean);
+        add(byFull, t.join(' '), x.id);
+        if (t.length >= 2) add(byFL, t[0] + '|' + t[t.length - 1], x.id);
+      }
+      return { byEmail, byFull, byFL };
+    };
+    const rosterList = S.roster.map((r) => ({ id: r.contactId, name: r.name, email: r.email }));
+    const dir = new Map();
+    for (const c of S.att.clients || []) if (!ids.has(c[0])) dir.set(c[0], { id: c[0], name: c[1], email: c[2], tier: c[3], program: c[4] });
+    const R = index(rosterList), C = index([...dir.values()]);
     const toks = [...new Map(S.roster.map((r) => [r.contactId, { id: r.contactId, t: nrm(r.name).split(' ').filter(Boolean) }])).values()].filter((x) => x.t.length);
     const alias = S.att.aliases || {};
-    const match = (name, email) => {
-      if (email && byEmail.has(email)) return byEmail.get(email);
-      const n = nrm(name);
-      if (Object.prototype.hasOwnProperty.call(alias, n)) { const a = alias[n]; if (a === null) return null; if (ids.has(a)) return a; }
-      if (byFull.get(n)) return byFull.get(n);
+    const exact = (ix, n, email) => {
+      if (email && ix.byEmail.has(email)) return ix.byEmail.get(email);
+      if (ix.byFull.get(n)) return ix.byFull.get(n);
       const t = n.split(' ').filter(Boolean);
-      if (t.length >= 2) {
-        const fl = byFL.get(t[0] + '|' + t[t.length - 1]) || byFL.get(t[0] + '|' + t[1]);
-        if (fl) return fl;
-      }
-      // Short forms: one word ("adelina", "farahsiddiqui", "Mitch") or a short first name ("chris mallin").
-      // Only counted when exactly one member fits.
+      if (t.length >= 2) return ix.byFL.get(t[0] + '|' + t[t.length - 1]) || ix.byFL.get(t[0] + '|' + t[1]) || null;
+      return null;
+    };
+    // Exact matches first (Built to Win members, then every other client), then short forms against Built to Win members only:
+    // one word ("adelina", "farahsiddiqui", "Mitch") or a short first name ("chris mallin"), counted only when exactly one member fits.
+    const match = (name, email) => {
+      const n = nrm(name);
+      if (email && R.byEmail.has(email)) return R.byEmail.get(email);
+      if (email && C.byEmail.has(email)) return C.byEmail.get(email);
+      if (Object.prototype.hasOwnProperty.call(alias, n)) { const a = alias[n]; if (a === null) return null; if (ids.has(a) || dir.has(a)) return a; }
+      const r = exact(R, n, '') || exact(C, n, '');
+      if (r) return r;
+      const t = n.split(' ').filter(Boolean);
       const one = (test) => { const hit = toks.filter(test); return hit.length === 1 ? hit[0].id : null; };
       if (t.length === 1 && t[0].length >= 3) return one((x) => x.t.join('') === t[0] || x.t[0] === t[0]) || (t[0].length >= 4 ? one((x) => x.t[0].startsWith(t[0])) : null);
       if (t.length >= 2 && t[0].length >= 3) return one((x) => x.t.length >= 2 && x.t[0].startsWith(t[0]) && x.t[x.t.length - 1] === t[t.length - 1]);
       return null;
     };
-    const days = new Map();
+    const days = new Map(), raw = new Map();
     for (const sn of S.att.sessions || []) {
       if (!sn.p || !sn.p.length) continue;
       const ymd = etDay(sn.start), k = sn.series + '|' + ymd;
       let d = days.get(k);
-      if (!d) { d = { series: sn.series, ymd, t: sn.start, mins: 0, people: new Set(), secs: new Map(), unmatched: new Set() }; days.set(k, d); }
+      if (!d) { d = { series: sn.series, ymd, t: sn.start, mins: 0, people: new Set(), secs: new Map(), unmatched: new Set(), devices: 0 }; days.set(k, d); }
       if (sn.start < d.t) d.t = sn.start;
       d.mins += sn.mins || 0;
       for (const [n, e, sec] of sn.p) {
-        const email = String(e || '').toLowerCase();
-        d.people.add(email || nrm(n));
-        const id = match(n, email);
-        if (id) d.secs.set(id, (d.secs.get(id) || 0) + (Number(sec) || 0));
-        else if (sn.series === 'btw') d.unmatched.add(n);
+        const email = String(e || '').toLowerCase(), nn = nrm(n);
+        d.people.add(email || nn);
+        let key = match(n, email);
+        if (!key) {
+          if (!nn || DEVICE.test(nn)) { d.devices++; if (sn.series === 'btw') d.unmatched.add(n); continue; }
+          key = 'g:' + (email || nn);
+          if (sn.series === 'btw') d.unmatched.add(n);
+        }
+        if (!raw.has(key)) raw.set(key, { name: n, email });
+        else if (email && !raw.get(key).email) raw.get(key).email = email;
+        d.secs.set(key, (d.secs.get(key) || 0) + (Number(sec) || 0));
       }
     }
     const list = [...days.values()].map((d) => {
       const need = d.mins && d.mins < 20 ? d.mins * 30 : 600;
-      return { series: d.series, ymd: d.ymd, t: d.t, mins: d.mins, total: d.people.size, present: new Set([...d.secs].filter(([, v]) => v >= need).map(([id]) => id)), unmatched: [...d.unmatched] };
+      const came = new Map([...d.secs].filter(([, v]) => v >= need));
+      return { series: d.series, ymd: d.ymd, t: d.t, mins: d.mins, total: d.people.size, devices: d.devices, came, present: new Set([...came.keys()].filter((id) => ids.has(id))), unmatched: [...d.unmatched] };
     }).sort((a, b) => String(a.t).localeCompare(String(b.t)));
-    S.attIdx = { roster: S.roster, days: list, syncedAt: S.att.synced_at || null };
+    // Everyone who attended, with who they are.
+    const rosterById = new Map(S.roster.map((r) => [r.contactId, r]));
+    const people = new Map();
+    for (const d of list) for (const [key, secs] of d.came) {
+      let p = people.get(key);
+      if (!p) {
+        const r = rosterById.get(key), c = dir.get(key), rw = raw.get(key) || {};
+        p = r ? { key, name: r.name, email: r.email || '', kind: 'btw', tag: 'C' + r.cohort.slice(1), member: r }
+          : c ? { key, name: c.name || rw.name, email: c.email || rw.email || '', kind: c.program === 'Legacy' ? 'legacy' : 'lead', tag: c.program === 'Legacy' ? (c.tier && c.tier !== 'Untagged' ? c.tier : 'Legacy') : 'BTW lead' }
+          : { key, name: titleName(rw.name || 'Unknown'), email: rw.email || '', kind: 'guest', tag: 'Guest' };
+        p.calls = [];
+        people.set(key, p);
+      }
+      p.calls.push({ d, secs });
+    }
+    S.attIdx = { roster: S.roster, days: list, people: [...people.values()], syncedAt: S.att.synced_at || null };
     return S.attIdx;
   }
   const addDays = (ymd, n) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -2462,6 +2564,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     renderUploads();
     renderOverview();
     renderDeals();
+    renderAttend();
   }
   function renderShell() {
     const counts = new Map();
@@ -2480,6 +2583,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     sel.replaceChildren(...opts.map((o) => { const op = h('option', { value: o.v }, o.label + (S.roster.length ? ' (' + o.n + ')' : '')); if (o.v === S.cohort) op.selected = true; return op; }));
     $('#n-uploads').textContent = fmtInt(D.uploads.length);
     $('#n-deals').textContent = S.dealsOk ? fmtInt(D.allDeals.length) : '';
+    $('#n-attendance').textContent = D.attIdx ? fmtInt(D.attIdx.people.length) : '';
   }
 
   function renderHome() {
@@ -2675,7 +2779,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       h('button', { type: 'button', onclick: () => {
         if (st.key === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
         else { st.key = key; st.dir = (key === 'name' || key === 'lesson') ? 'asc' : 'desc'; }
-        if (table === 'members') renderMembers(); else if (table === 'deals') renderDealTable(dealScope()); else renderUploads();
+        if (table === 'members') renderMembers(); else if (table === 'deals') renderDealTable(dealScope()); else if (table === 'att') renderAttTable(attScope()); else renderUploads();
       } }, label));
   }
 
@@ -3385,6 +3489,180 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   for (const b of document.querySelectorAll('#dl-who button')) b.addEventListener('click', () => { S.dlWho = b.dataset.w; renderDeals(); });
   $('#dl-search').addEventListener('input', (e) => { S.dlSearch = e.target.value; if (D && S.dealsOk) renderDealTable(dealScope()); });
 
+  // ---------- attendance ----------
+  const PROG = { btw: 'Built to Win', mastermind: 'Mastermind', ignite: 'IGNITE' };
+  const PROG_S = { btw: 'BTW', mastermind: 'MM', ignite: 'IGNITE' };
+  function attScope() {
+    const idx = D.attIdx, P = S.atPeriod, today = dayStart(Date.now());
+    const since = P ? addDay(today, -(P - 1)) : 0, prevSince = P ? addDay(since, -P) : 0;
+    const inProg = (d) => S.atProg === 'all' || d.series === S.atProg;
+    const days = idx.days.filter((d) => inProg(d) && new Date(d.t).getTime() >= since);
+    const prev = P ? idx.days.filter((d) => { const t = new Date(d.t).getTime(); return inProg(d) && t >= prevSince && t < since; }) : [];
+    const inSet = new Set(days);
+    const people = idx.people.map((p) => {
+      const mine = p.calls.filter((c) => inSet.has(c.d));
+      const by = { btw: 0, mastermind: 0, ignite: 0 };
+      for (const c of p.calls) if (new Date(c.d.t).getTime() >= since) by[c.d.series]++;
+      const last = p.calls[p.calls.length - 1];
+      return Object.assign({}, p, { mine, by, total: mine.length, mins: mine.length ? Math.round(mine.reduce((t, c) => t + c.secs, 0) / mine.length / 60) : 0, last: last ? last.d.t : null, lastProg: last ? last.d.series : null });
+    }).filter((p) => p.total > 0);
+    return { P, since, days, prev, people, per: P ? 'last ' + P + ' days' : 'all time' };
+  }
+  const tagClass = (p) => 'dl-tag ' + (p.kind === 'btw' ? '' : p.kind);
+  function renderAttend() {
+    const view = $('#view-attendance');
+    if (!view || view.hidden || !D) return;
+    for (const b of document.querySelectorAll('#at-period button')) b.setAttribute('aria-pressed', String(Number(b.dataset.p) === S.atPeriod));
+    for (const b of document.querySelectorAll('#at-prog button')) b.setAttribute('aria-pressed', String(b.dataset.g === S.atProg));
+    if (!D.attIdx) {
+      const msg = S.extErr.att ? 'Zoom attendance didn’t load. ' + S.extErr.att : 'Loading Zoom attendance…';
+      $('#at-sub').textContent = msg;
+      for (const id of ['#at-kpis', '#at-calls', '#at-top', '#at-progs', '#at-who', '#at-slip']) $(id).replaceChildren();
+      $('#att-list').replaceChildren(h('div', { class: S.extErr.att ? 'sect-err' : 'empty' }, msg));
+      return;
+    }
+    const idx = D.attIdx, X = attScope();
+    const key = S.atProg + '|' + S.atPeriod + '|' + idx.days.length;
+    const animate = key !== S.atAnimKey; S.atAnimKey = key;
+    view.classList.toggle('ov-anim', animate && !reduceMotion());
+    const kinds = (list) => { const c = { btw: 0, legacy: 0, lead: 0, guest: 0 }; for (const p of list) c[p.kind]++; return c; };
+    const k = kinds(idx.people);
+    $('#at-sub').textContent = fmtInt(idx.days.length) + ' calls since ' + fmtShort(idx.days[0] ? idx.days[0].t : Date.now()) + ' · ' + fmtInt(idx.people.length) + ' people: ' + fmtInt(k.btw) + ' Built to Win members, ' + fmtInt(k.legacy) + ' Legacy clients, ' + fmtInt(k.lead + k.guest) + ' others' + (idx.syncedAt ? ' · Zoom synced ' + ago(idx.syncedAt) + ' ago' : '');
+    renderAttKpis(X, animate);
+    renderAttCalls(X, animate);
+    renderAttTop(X);
+    renderAttProgs(X);
+    renderAttWho(X, animate);
+    renderAttSlip();
+    renderAttTable(X);
+  }
+  function renderAttKpis(X, animate) {
+    const tile = (label, val, fmt, sub, delta) => { const v = h('div', { class: 'ov-val' }); countUp(v, val, fmt, animate); return h('article', { class: 'ov-kpi' }, h('div', { class: 'ov-kl' }, label), v, h('div', { class: 'ov-ks' }, sub), delta); };
+    const uniq = (days) => { const u = new Set(); for (const d of days) for (const key of d.came.keys()) u.add(key); return u; };
+    const u = uniq(X.days), up = uniq(X.prev);
+    const avg = (days) => days.length ? days.reduce((t, d) => t + d.total, 0) / days.length : 0;
+    const bySeries = (days) => ['btw', 'mastermind', 'ignite'].map((g) => [g, days.filter((d) => d.series === g).length]).filter(([, n]) => n).map(([g, n]) => n + ' ' + PROG_S[g]).join(' · ');
+    const kinds = { btw: 0, legacy: 0, other: 0 };
+    for (const p of X.people) kinds[p.kind === 'btw' ? 'btw' : p.kind === 'legacy' ? 'legacy' : 'other']++;
+    const back = X.people.filter((p) => p.total >= 2).length;
+    $('#at-kpis').replaceChildren(
+      tile('Calls held', X.days.length, (x) => fmtInt(Math.round(x)), (bySeries(X.days) || 'none') + ' · ' + X.per, deltaNode(X.days.length, X.prev.length, X.P)),
+      tile('People who came', u.size, (x) => fmtInt(Math.round(x)), fmtInt(kinds.btw) + ' BTW · ' + fmtInt(kinds.legacy) + ' Legacy · ' + fmtInt(kinds.other) + ' others', deltaNode(u.size, up.size, X.P)),
+      tile('Average per call', avg(X.days), (x) => fmtInt(Math.round(x)), 'people on the Zoom · ' + X.per, deltaNode(Math.round(avg(X.days)), Math.round(avg(X.prev)), X.P)),
+      tile('Came back', X.people.length ? (back / X.people.length) * 100 : 0, (x) => Math.round(x) + '%', fmtInt(back) + ' of ' + fmtInt(X.people.length) + ' joined 2 or more calls', h('span', { class: 'ov-delta flat' }, X.per)));
+  }
+  function renderAttCalls(X, animate) {
+    const cols = X.days.slice(-24);
+    const avg = X.days.length ? X.days.reduce((t, d) => t + d.total, 0) / X.days.length : 0;
+    $('#at-avg').textContent = fmtInt(Math.round(avg));
+    $('#at-calls-sub').textContent = (S.atProg === 'all' ? 'Every program call' : PROG[S.atProg] + ' calls') + ', ' + X.per + (X.days.length > cols.length ? ' (latest ' + cols.length + ' of ' + X.days.length + ')' : '') + ' · team left out';
+    if (!cols.length) { $('#at-calls').replaceChildren(h('p', { class: 'muted' }, 'No calls in this period.')); return; }
+    const top = Math.max(1, ...cols.map((d) => d.total));
+    $('#at-calls').replaceChildren(h('div', { class: 'ov-cols ov-stallcols' }, cols.map((d, i) => {
+      const bar = h('span', { class: 'ov-col', style: '--h:' + ((d.total / top) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 25 + 'ms' : '') });
+      const lab = i === 0 || cols[i - 1].ymd.slice(5, 7) !== d.ymd.slice(5, 7) ? fmtShort(d.t) : String(Number(d.ymd.slice(8)));
+      const w = h('div', { class: 'ov-colwrap static', tabindex: '0', 'aria-label': PROG[d.series] + ' ' + fmtShort(d.t) + ': ' + d.total + ' people' },
+        h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, String(d.total)), bar), h('span', { class: 'ov-coln' }, lab), S.atProg === 'all' ? h('span', { class: 'ov-coln at-ser' }, PROG_S[d.series]) : null);
+      const kc = { btw: 0, legacy: 0, guest: 0 };
+      for (const key of d.came.keys()) { const p = D.attIdx.people.find((x) => x.key === key); if (p) kc[p.kind === 'btw' ? 'btw' : p.kind === 'legacy' ? 'legacy' : 'guest']++; }
+      const tip = (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, PROG[d.series] + ' · ' + new Date(d.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })), h('span', null, d.total + ' people · ' + (d.mins || '?') + ' min'), h('span', { class: 'muted' }, kc.btw + ' BTW members · ' + kc.legacy + ' Legacy clients · ' + kc.guest + ' others' + (d.devices ? ' · ' + d.devices + ' unnamed devices' : ''))]);
+      w.addEventListener('pointermove', tip); w.addEventListener('pointerleave', () => ovTip.hide());
+      return w;
+    })));
+  }
+  const progLine = (by) => ['btw', 'mastermind', 'ignite'].filter((g) => by[g]).map((g) => by[g] + ' ' + PROG_S[g]).join(' · ');
+  function openPersonRow(p) {
+    S.openPerson = p.key; S.atSearch = ''; $('#at-search').value = '';
+    renderAttTable(attScope());
+    const row = document.getElementById('pp-' + cssId(p.key));
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  const cssId = (k) => String(k).replace(/[^a-zA-Z0-9_-]/g, '_');
+  function renderAttTop(X) {
+    const list = X.people.slice().sort((a, b) => b.total - a.total || String(b.last).localeCompare(String(a.last))).slice(0, 8);
+    $('#at-top-sub').textContent = fmtInt(X.people.length) + ' people, ' + X.per;
+    if (!list.length) { $('#at-top').replaceChildren(h('p', { class: 'muted' }, 'Nobody in this period.')); return; }
+    $('#at-top').replaceChildren(h('ul', { class: 'ov-plist' }, list.map((p) => h('li', null, h('button', { type: 'button', class: 'ov-prow', onclick: () => openPersonRow(p) },
+      avatar(p.name),
+      h('span', { class: 'ov-pn' }, h('b', null, p.name, h('span', { class: tagClass(p) }, p.tag)), h('small', null, progLine(p.by))),
+      h('span', { class: 'dl-cnt' }, h('b', null, fmtInt(p.total)), h('small', null, p.total === 1 ? 'call' : 'calls')))))));
+  }
+  function renderAttProgs(X) {
+    const today = dayStart(Date.now()), since = X.P ? addDay(today, -(X.P - 1)) : 0;
+    const stat = (label, val, sub) => h('div', { class: 'ov-gs' }, h('span', null, label), h('b', null, val), h('small', null, sub));
+    $('#at-progs').replaceChildren(h('div', { class: 'at-prog3' }, ['btw', 'mastermind', 'ignite'].map((g) => {
+      const ds = D.attIdx.days.filter((d) => d.series === g && new Date(d.t).getTime() >= since);
+      const u = new Set(); for (const d of ds) for (const key of d.came.keys()) u.add(key);
+      const avg = ds.length ? Math.round(ds.reduce((t, d) => t + d.total, 0) / ds.length) : 0;
+      return stat(PROG[g], fmtInt(ds.length) + (ds.length === 1 ? ' call' : ' calls'), ds.length ? 'avg ' + avg + ' on the call · ' + u.size + ' different people' : 'none in this period');
+    })));
+  }
+  function renderAttWho(X, animate) {
+    const c = new Map();
+    for (const p of X.people) { const label = p.kind === 'btw' ? 'Built to Win members' : p.kind === 'legacy' ? (p.tag === 'Legacy' ? 'Legacy (no tier tag)' : 'Legacy ' + p.tag) : p.kind === 'lead' ? 'BTW leads, not paid' : 'Not in the client list'; c.set(label, (c.get(label) || 0) + 1); }
+    const rows = [...c.entries()].sort((a, b) => b[1] - a[1]);
+    if (!rows.length) { $('#at-who').replaceChildren(h('p', { class: 'muted' }, 'Nobody in this period.')); return; }
+    const n = Math.max(1, X.people.length);
+    const dev = X.days.reduce((t, d) => t + d.devices, 0);
+    $('#at-who').replaceChildren(h('ol', { class: 'ov-funnel' }, rows.map(([label, v], i) => {
+      const fill = h('span', { class: 'ov-ffill', style: '--w:' + ((v / n) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 70 + 'ms' : '') });
+      return h('li', null, h('div', { class: 'ov-frow' }, h('span', null, label), h('b', null, fmtInt(v), h('small', null, ' · ' + Math.round((v / n) * 100) + '%'))), h('span', { class: 'ov-ftrack' }, fill));
+    })), h('p', { class: 'ov-foot muted' }, 'Matched by email, name and names the Roll Call linked.' + (dev ? ' ' + fmtInt(dev) + ' joins came from unnamed devices (iPhone, Zoom user) and aren’t counted.' : '')));
+  }
+  function renderAttSlip() {
+    const today = dayStart(Date.now()), cut = addDay(today, -13);
+    const inProg = (c) => S.atProg === 'all' || c.d.series === S.atProg;
+    const list = D.attIdx.people.map((p) => { const cs = p.calls.filter(inProg); return { p, n: cs.length, last: cs.length ? cs[cs.length - 1].d.t : null }; })
+      .filter((x) => x.n >= 3 && new Date(x.last).getTime() < cut).sort((a, b) => b.n - a.n || String(b.last).localeCompare(String(a.last)));
+    if (!list.length) { $('#at-slip').replaceChildren(h('p', { class: 'muted' }, 'Nobody. Everyone with 3+ calls came in the last 14 days.')); return; }
+    $('#at-slip').replaceChildren(h('ul', { class: 'ov-plist' }, list.slice(0, 6).map((x) => h('li', null, h('button', { type: 'button', class: 'ov-prow', onclick: () => { S.atPeriod = 0; renderAttend(); openPersonRow(x.p); } },
+      avatar(x.p.name),
+      h('span', { class: 'ov-pn' }, h('b', null, x.p.name, h('span', { class: tagClass(x.p) }, x.p.tag)), h('small', null, x.n + ' calls · last ' + fmtShort(x.last) + ' (' + ago(x.last) + ' ago)')),
+      icon('chev'))))), list.length > 6 ? h('p', { class: 'ov-foot muted' }, '+' + (list.length - 6) + ' more. Sort the table below by “Last seen” to see them all.') : null);
+  }
+  function renderAttTable(X) {
+    const box = $('#att-list');
+    const q = S.atSearch.trim().toLowerCase();
+    let rows = X.people.filter((p) => !q || (p.name + ' ' + p.email + ' ' + p.tag).toLowerCase().includes(q));
+    rows = sortRows(rows, S.sort.att, { name: (p) => p.name.toLowerCase(), tag: (p) => p.tag, btw: (p) => p.by.btw, mastermind: (p) => p.by.mastermind, ignite: (p) => p.by.ignite, total: (p) => p.total, mins: (p) => p.mins, last: (p) => p.last });
+    $('#at-list-sub').textContent = fmtInt(rows.length) + (rows.length === 1 ? ' person' : ' people') + ', ' + X.per + (q ? ' matching “' + S.atSearch.trim() + '”' : '') + '. Open a person to see every call they joined.';
+    if (!rows.length) { box.replaceChildren(h('div', { class: 'empty' }, q ? 'Nobody matches “' + S.atSearch.trim() + '”.' : 'Nobody attended in this period.')); return; }
+    const detail = (p) => h('div', null,
+      h('ul', { class: 'at-chips' }, p.calls.slice().reverse().map((c) => h('li', null, h('b', null, fmtShort(c.d.t)), ' ', PROG[c.d.series], h('span', null, ' · ' + Math.round(c.secs / 60) + ' min')))),
+      p.member ? h('button', { type: 'button', class: 'btn small', onclick: (e) => { e.stopPropagation(); openMemberAny(p.member.contactId); } }, 'Open ' + p.name.split(' ')[0] + '’s member page') : null);
+    const toggle = (p) => { S.openPerson = S.openPerson === p.key ? null : p.key; renderAttTable(attScope()); };
+    if (isPhone()) {
+      box.replaceChildren(h('ul', { class: 'ov-plist dl-plist' }, rows.map((p) => h('li', { id: 'pp-' + cssId(p.key) },
+        h('button', { type: 'button', class: 'ov-prow', 'aria-expanded': String(S.openPerson === p.key), onclick: () => toggle(p) },
+          h('span', { class: 'ov-pn' }, h('b', null, p.name, h('span', { class: tagClass(p) }, p.tag)), h('small', null, (progLine(p.by) || '—') + ' · last ' + fmtShort(p.last))),
+          h('span', { class: 'dl-cnt' }, h('b', null, fmtInt(p.total)), h('small', null, p.total === 1 ? 'call' : 'calls'))),
+        S.openPerson === p.key ? detail(p) : null))));
+      return;
+    }
+    const tbody = h('tbody');
+    const n = (v) => h('td', { class: 'num' + (v ? '' : ' zero') }, v ? fmtInt(v) : '0');
+    for (const p of rows) {
+      const open = S.openPerson === p.key;
+      const tr = h('tr', { class: 'click' + (open ? ' open' : ''), id: 'pp-' + cssId(p.key), tabindex: '0', 'aria-expanded': String(open) });
+      tr.addEventListener('click', () => toggle(p));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(p); } });
+      tr.append(
+        h('td', { class: 'c-who' }, h('div', { class: 'person' }, avatar(p.name), h('span', { style: 'min-width:0' }, h('b', null, p.name, h('span', { class: tagClass(p) }, p.tag)), h('small', null, p.email || 'No email from Zoom')))),
+        n(p.by.btw), n(p.by.mastermind), n(p.by.ignite),
+        h('td', { class: 'num' }, h('b', null, fmtInt(p.total))),
+        h('td', { class: 'num hide-mid' }, p.mins + ' min'),
+        h('td', null, fmtShort(p.last), h('small', null, PROG_S[p.lastProg] + ' · ' + ago(p.last) + ' ago')));
+      tbody.append(tr);
+      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: '7' }, detail(p))));
+    }
+    box.replaceChildren(h('table', null, h('thead', null, h('tr', null,
+      headCell('att', 'name', 'Person'), headCell('att', 'btw', 'Built to Win', 'num'), headCell('att', 'mastermind', 'Mastermind', 'num'), headCell('att', 'ignite', 'IGNITE', 'num'),
+      headCell('att', 'total', S.atProg === 'all' ? 'Total' : PROG_S[S.atProg] + ' calls', 'num'), headCell('att', 'mins', 'Avg time', 'num hide-mid'), headCell('att', 'last', 'Last seen'))), tbody));
+  }
+  for (const b of document.querySelectorAll('#at-period button')) b.addEventListener('click', () => { S.atPeriod = Number(b.dataset.p); renderAttend(); });
+  for (const b of document.querySelectorAll('#at-prog button')) b.addEventListener('click', () => { S.atProg = b.dataset.g; renderAttend(); });
+  $('#at-search').addEventListener('input', (e) => { S.atSearch = e.target.value; if (D && D.attIdx) renderAttTable(attScope()); });
+
   // Members type these as free text ("80,200", "$95k", "undetermined"); show numbers as money, leave words as written.
   function moneyish(v) {
     const t = String(v).trim();
@@ -3554,7 +3832,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   if (window.ResizeObserver) { let rt = 0, lastW = 0; new ResizeObserver((es) => { const w = Math.round(es[0].contentRect.width); if (Math.abs(w - lastW) < 8) return; lastW = w; clearTimeout(rt); rt = setTimeout(() => { const k = S.ovAnimKey; renderOverview(); S.ovAnimKey = k; }, 120); }).observe($('#view-overview')); }
 
   // ---------- views & controls ----------
-  const VIEWS = ['overview', 'grade', 'members', 'deals', 'lessons', 'uploads'];
+  const VIEWS = ['overview', 'grade', 'members', 'deals', 'attendance', 'lessons', 'uploads'];
   function show(view, push) {
     if (!VIEWS.includes(view)) view = 'overview';
     S.view = view;
@@ -3567,6 +3845,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     syncSheet();
     if (view === 'overview') renderOverview();
     if (view === 'deals') renderDeals();
+    if (view === 'attendance') renderAttend();
     if (push && location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch (_) { /* hash only */ } }
   }
   for (const a of document.querySelectorAll('.nav')) a.addEventListener('click', (e) => { e.preventDefault(); show(a.dataset.view, true); window.scrollTo({ top: 0 }); });
