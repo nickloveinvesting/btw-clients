@@ -1,0 +1,2514 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.signout { font-size: 12px; color: var(--muted); text-decoration: none; }
+.signout:hover { color: var(--ink); text-decoration: underline; }
+@media (max-width: 640px) { .signout { display: none; } }
+</style><script>window.__HOSTED=true;window.__DASH_USER=__DASH_USER_JSON__;</script><script>// Hosted mode: stands in for claude.ai's window.claude so the same dashboard code runs on its own site.
+(function () {
+  var USER = window.__DASH_USER || '';
+  async function post(path, body) {
+    var r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) });
+    if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname + location.hash); throw Object.assign(new Error('Signed out'), { code: 'needs_reauth' }); }
+    return r.json();
+  }
+  function b64(buf) { var u = new Uint8Array(buf), s = ''; for (var i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+  var mcp = {
+    callTool: async function (server, tool, input) {
+      if (server === 'Gohighlevel') {
+        var res;
+        try { res = await post('/api/ghl', { operationId: input.operationId, params: input.params || {} }); }
+        catch (e) { if (e && e.code) throw e; throw Object.assign(new Error('The dashboard server did not answer. Check your connection and press Refresh.'), { code: 'server_unavailable', retryable: true }); }
+        if (res && res.ok) return { payload: res.body };
+        var err = new Error(JSON.stringify({ success: false, status: res && res.status, data: { error: { message: (res && res.message) || 'GoHighLevel refused the request' } } }));
+        err.code = 'tool_error'; err.ghlStatus = res && res.status;
+        throw err;
+      }
+      if (server === 'Make MCP') {
+        var url = input && input.data && input.data.url;
+        var r = await fetch('/api/file?u=' + encodeURIComponent(url), { credentials: 'same-origin' });
+        if (!r.ok) throw Object.assign(new Error('file fetch failed (' + r.status + ')'), { code: 'tool_error' });
+        return { payload: { result: { outputs: { b64: b64(await r.arrayBuffer()) } } } };
+      }
+      throw Object.assign(new Error('unknown server'), { code: 'server_not_connected' });
+    },
+    listTools: async function () { return { servers: [{ server: 'Gohighlevel', authStatus: 'connected', tools: [{ name: 'execute_operation', description: '' }] }] }; }
+  };
+  window.claude = { use: async function (name) { return name === 'mcp' ? mcp : null; } };
+  document.addEventListener('DOMContentLoaded', function () {
+    var foot = document.querySelector('.side-foot');
+    if (!foot || !USER) return;
+    var a = document.createElement('a');
+    a.href = '/logout'; a.className = 'signout';
+    a.textContent = USER + ' · Sign out';
+    foot.appendChild(a);
+  });
+})();
+</script><title>BTW Homework Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell. Fixed left sidebar (views, cohort, sync), main column with a greeting, KPI row, the grading inbox beside a follow-up panel, then the activity stream. */
+:root {
+  --ground: #EDEFEA;
+  --panel: #FFFFFF;
+  --side: #FAFBF8;
+  --ink: #141614;
+  --ink-2: #454B45;
+  --muted: #5C635C;
+  --line: #E0E3DC;
+  --soft: #F2F4EF;
+  --lime: #D6F26A;
+  --lime-ink: #1B2400;
+  --lime-soft: #F0F9D2;
+  --primary: #141614;
+  --primary-ink: #FFFFFF;
+  --ok: #18723F;
+  --ok-soft: #E1F2E7;
+  --warn: #8F5500;
+  --warn-soft: #FBEFD8;
+  --bad: #AE2F25;
+  --bad-soft: #FBE4E1;
+  --on-status: #FFFFFF;
+  --none: #C3C8BF;
+  --focus: #141614;
+  --shadow: 0 1px 2px rgba(20, 22, 20, .05), 0 6px 18px rgba(20, 22, 20, .05);
+  --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-lg: 18px;
+  --r: 12px;
+  --r-sm: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0E100F; --panel: #171A18; --side: #121513; --ink: #EDEFEC; --ink-2: #C3C8C2; --muted: #969C95;
+    --line: #282C29; --soft: #1F2320; --lime: #C9E957; --lime-ink: #151B00; --lime-soft: #283113;
+    --primary: #EDEFEC; --primary-ink: #121412; --ok: #4CC38A; --ok-soft: #15301F; --warn: #E6A540; --warn-soft: #35290F;
+    --bad: #EF6B5F; --bad-soft: #3A1A17; --on-status: #0E100F; --none: #3B403B; --focus: #C9E957; --shadow: 0 1px 2px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0E100F; --panel: #171A18; --side: #121513; --ink: #EDEFEC; --ink-2: #C3C8C2; --muted: #969C95;
+  --line: #282C29; --soft: #1F2320; --lime: #C9E957; --lime-ink: #151B00; --lime-soft: #283113;
+  --primary: #EDEFEC; --primary-ink: #121412; --ok: #4CC38A; --ok-soft: #15301F; --warn: #E6A540; --warn-soft: #35290F;
+  --bad: #EF6B5F; --bad-soft: #3A1A17; --on-status: #0E100F; --none: #3B403B; --focus: #C9E957; --shadow: 0 1px 2px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--font); font-size: 14.5px; line-height: 1.45; caret-color: var(--ink); accent-color: var(--ink); scrollbar-color: var(--none) transparent; }
+::selection { background: var(--lime); color: var(--lime-ink); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+a { color: inherit; text-underline-offset: 3px; }
+.num, td, .kval { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.ico { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Shell */
+.shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+.shell::before { content: ""; position: fixed; z-index: -1; top: 0; bottom: 0; left: 0; width: 252px; background: var(--side); border-right: 1px solid var(--line); }
+.side { position: sticky; top: env(safe-area-inset-top, 0px); height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); background: var(--side); border-right: 1px solid var(--line); align-self: start; display: flex; flex-direction: column; gap: 22px; padding: 20px 14px 16px max(14px, env(safe-area-inset-left, 0px)); overflow-y: auto; }
+.logo { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+.mark { width: 36px; height: 36px; border-radius: 10px; background: var(--primary); color: var(--primary-ink); display: grid; place-items: center; font-weight: 700; font-size: 11px; letter-spacing: 0; flex: none; }
+.logo b { display: block; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.logo div span { display: block; font-size: 12.5px; color: var(--muted); }
+.navgroup { display: flex; flex-direction: column; gap: 2px; }
+.glabel { margin: 0 0 6px; padding: 0 10px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.nav { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; text-decoration: none; color: var(--ink-2); font-weight: 500; }
+.nav:hover { background: var(--soft); color: var(--ink); }
+.nav[aria-current="page"] { background: var(--primary); color: var(--primary-ink); }
+.nav .ncount { margin-left: auto; font-size: 12px; font-weight: 600; min-width: 24px; text-align: center; padding: 1px 7px; border-radius: 999px; background: var(--soft); color: var(--ink-2); }
+.nav[aria-current="page"] .ncount { background: rgba(255,255,255,.16); color: inherit; }
+:root[data-theme="dark"] .nav[aria-current="page"] .ncount { background: rgba(0,0,0,.12); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav[aria-current="page"] .ncount { background: rgba(0,0,0,.12); } :root:not([data-theme="light"]) .btn.primary:hover { filter: brightness(.9); } }
+.nav .ncount.hot { background: var(--warn-soft); color: var(--warn); }
+.nav[aria-current="page"] .ncount.hot, :root .nav[aria-current="page"] .ncount.hot { background: var(--warn-soft); color: var(--warn); }
+.cohorts { display: flex; flex-direction: column; gap: 2px; }
+.coh { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink-2); cursor: pointer; text-align: left; font-weight: 500; }
+.coh:hover { background: var(--soft); color: var(--ink); }
+.coh .radio { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--none); flex: none; }
+.coh[aria-checked="true"] { color: var(--ink); background: var(--soft); }
+.coh[aria-checked="true"] .radio { border: 4px solid var(--ink); }
+.coh .cn { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.coh-select { display: none; width: 100%; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); padding: 0 10px; font-weight: 500; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: var(--r); background: var(--soft); }
+.sync { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--none); flex: none; }
+.dot.live { background: var(--ok); }
+.dot.err { background: var(--bad); }
+.dot.busy { background: var(--warn); }
+
+.main { min-width: 0; padding: 0 max(28px, env(safe-area-inset-right, 0px)) 48px 28px; display: flex; flex-direction: column; gap: 16px; }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; display: flex; align-items: center; gap: 14px; padding-block: 14px; background: var(--ground); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ground); }
+.search { position: relative; flex: 1 1 auto; max-width: 440px; }
+.search .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.search input { width: 100%; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); padding: 0 12px 0 38px; }
+.search input::placeholder { color: var(--muted); }
+.results { position: absolute; z-index: 8; top: calc(100% + 6px); left: 0; right: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 6px; max-height: 360px; overflow-y: auto; }
+.rgroup { padding: 6px 8px 2px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ritem { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; background: none; border-radius: 8px; text-align: left; cursor: pointer; text-decoration: none; }
+.ritem:hover, .ritem:focus-visible { background: var(--soft); }
+.ritem small { display: block; color: var(--muted); }
+.today { margin-left: auto; color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background-color .15s, filter .15s; }
+.btn:hover { background: var(--soft); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+.btn.primary:hover { filter: brightness(1.15); }
+:root[data-theme="dark"] .btn.primary:hover { filter: brightness(.9); }
+.btn.small { min-height: 32px; padding: 5px 11px; font-size: 13px; }
+.btn.block { width: 100%; }
+.btn .ico { width: 16px; height: 16px; }
+
+/* Banner */
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); }
+.banner .ico { margin-top: 1px; }
+.banner.bad { background: var(--bad-soft); border-color: transparent; color: var(--ink); }
+.banner.bad .ico { color: var(--bad); }
+.diag { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.diag summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.diag-list { margin: 8px 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.diag-act { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Greeting */
+.greet { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.greet-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; min-width: 0; }
+.greet-text h1 { font-size: 26px; }
+h1 { margin: 0; font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -.025em; text-wrap: balance; }
+.summary { margin: 0; color: var(--ink-2); font-size: 15px; text-wrap: pretty; }
+.summary b { color: var(--ink); font-weight: 600; }
+.greet-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (min-width: 901px) { .greet .greet-actions { display: none; } }
+
+/* KPI cards */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.kpi { background: var(--panel); border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--shadow); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; gap: 1px 14px; min-width: 0; }
+.khead { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13.5px; min-width: 0; white-space: nowrap; }
+.khead .ico { width: 15px; height: 15px; color: var(--muted); }
+.ksub { grid-column: 2; grid-row: 2; font-size: 12.5px; color: var(--muted); min-height: 1.45em; }
+.ksub .up { color: var(--ok); font-weight: 600; }
+.ksub .hot { color: var(--warn); font-weight: 600; }
+.kval { grid-column: 1; grid-row: 1 / 3; font-size: 30px; font-weight: 600; letter-spacing: -.03em; line-height: 1; min-width: 1.3ch; }
+.kval small { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 2px; }
+.mini { grid-column: 3; grid-row: 1 / 3; display: flex; align-items: flex-end; gap: 2px; height: 32px; }
+.mini i { display: block; width: 5px; border-radius: 3px; background: var(--soft); min-height: 3px; }
+.mini i.on { background: var(--ink); opacity: .8; }
+.meter { grid-column: 3; grid-row: 1 / 3; display: flex; width: 52px; height: 8px; border-radius: 999px; overflow: hidden; background: var(--soft); }
+.meter i { display: block; height: 100%; }
+.skel { display: inline-block; width: 2.4ch; height: .8em; border-radius: 6px; background: var(--soft); vertical-align: middle; }
+
+/* Cards */
+.card { background: var(--panel); border-radius: var(--r-lg); box-shadow: var(--shadow); min-width: 0; }
+.chead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 16px 18px 12px; }
+.chead h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.chead h2 .ico { color: var(--muted); }
+.chead p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.chip-n { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); }
+.empty { padding: 28px 18px; color: var(--muted); text-align: center; }
+.sect-err { padding: 16px 18px; color: var(--bad); }
+
+/* Home grid */
+.home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+.rail { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* Inbox */
+.inbox-body { display: grid; grid-template-columns: 280px minmax(0, 1fr); border-top: 1px solid var(--line); min-height: 460px; }
+.qlist { border-right: 1px solid var(--line); max-height: 640px; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.qrow { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; color: var(--ink); }
+.qrow:hover { background: var(--soft); }
+.qrow[aria-selected="true"] { background: var(--lime-soft); }
+.qrow[aria-selected="true"] .av { background: var(--lime); color: var(--lime-ink); }
+.qrow b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qrow small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qrow .age { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.qrow .age.old { color: var(--warn); font-weight: 600; }
+.av { width: 34px; height: 34px; border-radius: 50%; background: var(--soft); color: var(--ink-2); display: grid; place-items: center; font-size: 12.5px; font-weight: 600; flex: none; }
+.av.lg { width: 44px; height: 44px; font-size: 14.5px; }
+
+.qdetail { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dhead { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.dhead .who { min-width: 0; }
+.dhead b { display: block; font-size: 17px; font-weight: 600; }
+.dhead small { display: block; color: var(--muted); overflow-wrap: anywhere; }
+.dhead .nav-btns { margin-left: auto; display: flex; gap: 6px; }
+.lesson-line { font-size: 16px; font-weight: 600; margin: 0; }
+.lesson-full { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 13px; margin-top: 4px; }
+.meta span { display: inline-flex; align-items: center; gap: 6px; }
+.meta .ico { width: 15px; height: 15px; }
+.files { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.file { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); text-decoration: none; min-width: 0; transition: background-color .15s; }
+a.file:hover, button.file:hover { background: var(--soft); }
+button.file { width: 100%; text-align: left; cursor: pointer; color: var(--ink); font: inherit; }
+button.file.opened { border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
+.linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
+.linkbtn:hover { color: var(--ok); }
+.file .ext { flex: none; width: 38px; height: 38px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; color: var(--ink-2); }
+.file .fn { min-width: 0; }
+.file .fn b { display: block; font-weight: 500; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file .fn small { color: var(--muted); font-size: 12px; }
+.file .ico { margin-left: auto; color: var(--muted); width: 16px; height: 16px; }
+
+/* Grader */
+.grader { display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--soft); min-width: 0; transition: background-color .2s; }
+.grader.is-pass { background: color-mix(in srgb, var(--ok-soft) 45%, var(--soft)); }
+.grader.is-redo { background: color-mix(in srgb, var(--bad-soft) 40%, var(--soft)); }
+.gtop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.gtop h3 { margin: 0; font-size: 14.5px; font-weight: 600; }
+.current { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; column-gap: 10px; min-height: 56px; padding: 9px 30px 9px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--panel); text-align: left; cursor: pointer; color: var(--ink); transition: background-color .15s, border-color .15s, opacity .15s, transform .08s; }
+.choice b { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.25; }
+.choice small { display: block; font-size: 12px; color: var(--muted); line-height: 1.3; }
+.choice .ico { width: 18px; height: 18px; justify-self: center; }
+.choice:active:not(:disabled) { transform: scale(.985); }
+.choice.pass { background: color-mix(in srgb, var(--ok-soft) 60%, var(--panel)); border-color: color-mix(in srgb, var(--ok) 22%, var(--line)); }
+.choice.pass .ico { color: var(--ok); }
+.choice.pass:hover { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.choice.redo .ico { color: var(--bad); }
+.choice.redo:hover { background: color-mix(in srgb, var(--bad-soft) 55%, var(--panel)); border-color: color-mix(in srgb, var(--bad) 35%, var(--line)); }
+.choice[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--panel) inset; }
+.choice.pass[aria-pressed="true"] { background: var(--ok-soft); border-color: var(--ok); }
+.choice.pass[aria-pressed="true"] b { color: var(--ok); font-weight: 700; }
+.choice.redo[aria-pressed="true"] { background: var(--bad-soft); border-color: var(--bad); }
+.choice.redo[aria-pressed="true"] b { color: var(--bad); font-weight: 700; }
+.choices.has-pick .choice[aria-pressed="false"] { opacity: .6; }
+.choices.has-pick .choice[aria-pressed="false"]:hover { opacity: 1; }
+.choice .tick { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%; display: none; place-items: center; color: var(--on-status); }
+.choice .tick .ico { width: 12px; height: 12px; color: inherit; stroke-width: 3; }
+.choice.pass[aria-pressed="true"] .tick { display: grid; background: var(--ok); }
+.choice.redo[aria-pressed="true"] .tick { display: grid; background: var(--bad); }
+.choice:disabled { opacity: .5; cursor: default; }
+.row2 { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.field .opt { font-weight: 400; color: var(--muted); }
+.field input, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 9px 11px; color: var(--ink); font-size: 14px; font-weight: 400; transition: border-color .15s, box-shadow .15s; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
+.field textarea { resize: vertical; min-height: 76px; }
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+.fnote { font-size: 12px; font-weight: 400; color: var(--muted); }
+.fnote.warn { color: var(--warn); font-weight: 500; }
+.gactions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.gactions .hint { font-size: 12.5px; color: var(--muted); }
+.btn.save-pass { background: var(--ok); border-color: var(--ok); color: var(--on-status); }
+.btn.save-redo { background: var(--bad); border-color: var(--bad); color: var(--on-status); }
+.btn.save-pass:hover, .btn.save-redo:hover { filter: brightness(1.08); }
+.spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12px; color: var(--muted); margin-left: auto; }
+kbd { font: inherit; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); border-bottom-width: 2px; background: var(--panel); color: var(--ink-2); }
+.gmsg { margin: 0; font-size: 13px; display: flex; gap: 8px; align-items: flex-start; }
+.gmsg:empty { display: none; }
+.gmsg.bad { color: var(--ink); background: var(--bad-soft); padding: 10px 12px; border-radius: 10px; }
+.gmsg.bad .ico { color: var(--bad); width: 16px; height: 16px; margin-top: 1px; }
+.lastfb { margin: 0; font-size: 12.5px; color: var(--muted); }
+.gdone { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; background: var(--panel); }
+.gdone .badge { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--on-status); animation: pop .35s cubic-bezier(.2, .9, .3, 1.4); }
+.gdone .badge .ico { width: 18px; height: 18px; stroke-width: 2.6; }
+.gdone.pass .badge { background: var(--ok); }
+.gdone.redo .badge { background: var(--bad); }
+.gdone b { display: block; font-size: 15px; }
+.gdone small { display: block; color: var(--muted); font-size: 12.5px; }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.file .seen { margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--ok); display: inline-flex; align-items: center; gap: 4px; }
+.file .seen .ico { width: 13px; height: 13px; margin: 0; color: var(--ok); }
+.file .seen + .ico { margin-left: 8px; }
+a.file.opened { border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
+
+/* File viewer */
+.viewer { width: min(1120px, calc(100vw - 32px)); height: calc(100vh - 40px); max-height: none; max-width: none; margin: auto; padding: 0; border: 0; border-radius: var(--r-lg); background: var(--panel); color: var(--ink); box-shadow: 0 24px 64px rgba(0,0,0,.25); overflow: hidden; }
+.viewer[open] { display: flex; flex-direction: column; }
+.viewer::backdrop { background: rgba(12, 14, 12, .5); }
+.vhd { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--line); }
+.vhd .ext { flex: none; width: 38px; height: 38px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: var(--ink-2); }
+.vhd .vt { min-width: 0; flex: 1; }
+.vhd .vt b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vhd .vt small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vhd .vact { display: flex; align-items: center; gap: 6px; flex: none; }
+.vhd a.btn { text-decoration: none; }
+.vtabs { display: flex; gap: 4px; padding: 8px 14px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.vtab { flex: none; border: 1px solid var(--line); background: var(--panel); border-radius: 9px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vtab[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+.vbody { flex: 1; min-height: 0; overflow: auto; background: var(--soft); position: relative; }
+.vstate { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; height: 100%; padding: 32px; text-align: center; color: var(--ink-2); }
+.vstate p { margin: 0; max-width: 52ch; }
+.vstate .spin { width: 22px; height: 22px; }
+.docpage { box-sizing: border-box; max-width: 816px; margin: 24px auto; padding: 56px 64px; background: var(--panel); border-radius: 6px; box-shadow: var(--shadow); font-size: 15px; line-height: 1.6; color: var(--ink); overflow-wrap: break-word; }
+.docpage h1, .docpage h2, .docpage h3 { line-height: 1.25; margin: 1.2em 0 .5em; }
+.docpage h1 { font-size: 24px; } .docpage h2 { font-size: 19px; } .docpage h3 { font-size: 16px; }
+.docpage p { margin: 0 0 .8em; }
+.docpage table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 14px; }
+.docpage td, .docpage th { border: 1px solid var(--line); padding: 6px 8px; vertical-align: top; white-space: normal; color: var(--ink); font-size: 14px; }
+.docpage img { max-width: 100%; height: auto; }
+.pdfpages { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px; }
+.pdfpages canvas { display: block; max-width: 100%; height: auto; background: #fff; box-shadow: var(--shadow); border-radius: 4px; }
+.vnote { padding: 8px 18px; font-size: 12.5px; color: var(--muted); background: var(--panel); border-top: 1px solid var(--line); }
+.sheetwrap { overflow: auto; height: 100%; background: var(--panel); }
+table.sheet { border-collapse: separate; border-spacing: 0; font-size: 13px; width: max-content; min-width: 100%; }
+table.sheet th, table.sheet td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 5px 9px; white-space: nowrap; max-width: 340px; overflow: hidden; text-overflow: ellipsis; text-align: left; font-weight: 400; color: var(--ink); }
+table.sheet thead th { position: sticky; top: 0; z-index: 2; background: var(--soft); font-weight: 600; color: var(--ink-2); font-size: 12px; text-align: center; }
+table.sheet .rn { position: sticky; left: 0; z-index: 1; background: var(--soft); color: var(--muted); font-size: 12px; text-align: right; min-width: 40px; }
+table.sheet thead .rn { z-index: 3; }
+table.sheet tbody tr:hover td { background: var(--lime-soft); }
+.stabs { display: flex; gap: 4px; padding: 8px 14px; background: var(--panel); border-top: 1px solid var(--line); overflow-x: auto; }
+.stab { flex: none; border: 0; background: none; border-radius: 8px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.stab[aria-selected="true"] { background: var(--soft); color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+.vimg { display: block; max-width: calc(100% - 40px); margin: 20px auto; border-radius: 6px; box-shadow: var(--shadow); }
+@media (max-width: 640px) { .viewer { width: 100vw; height: 100vh; border-radius: 0; } .docpage { padding: 28px 20px; margin: 0; border-radius: 0; } .vhd .vact .btn span.lbl { display: none; } }
+
+/* Document fidelity views */
+.docxhost { min-height: 100%; }
+.docxhost .dx-wrapper { background: var(--soft) !important; padding: 24px 16px !important; display: flex; flex-direction: column; align-items: center; }
+.docxhost .dx-wrapper > section.dx { box-shadow: var(--shadow) !important; margin-bottom: 20px !important; border-radius: 3px; }
+table.sheet.xl { table-layout: fixed; width: max-content; min-width: 0; background: #fff; color: #000; }
+table.sheet.xl td { color: #000; background: #fff; border-right: 1px solid #E2E4DF; border-bottom: 1px solid #E2E4DF; font-size: 13px; vertical-align: bottom; }
+table.sheet.xl td.num { text-align: right; }
+.sheetwrap { background: #fff; }
+
+/* Pills */
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.ok { color: var(--ok); background: var(--ok-soft); }
+.pill.warn { color: var(--warn); background: var(--warn-soft); }
+.pill.bad { color: var(--bad); background: var(--bad-soft); }
+.pill.none { color: var(--muted); background: var(--soft); }
+
+/* Follow-up */
+.flist { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 14px; }
+.fitem { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; width: 100%; padding: 11px 12px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel); text-align: left; cursor: pointer; color: var(--ink); }
+.fitem:hover { background: var(--soft); }
+.fitem b { display: block; font-weight: 600; }
+.fitem small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.fitem .pill { margin-top: 6px; }
+.fitem .dupnote { color: var(--warn); }
+.dupflag { color: var(--warn); font-weight: 600; }
+.fmore { padding: 0 16px 14px; }
+
+/* Activity */
+.alist { list-style: none; margin: 0; padding: 0 8px 10px; }
+.aitem { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; padding: 10px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; color: var(--ink); }
+.aitem:hover { background: var(--soft); }
+.aitem .what { min-width: 0; }
+.aitem .what span { color: var(--ink-2); }
+.aitem .when { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.aitem .sub { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+
+/* Views */
+.view { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.vhead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; padding-top: 4px; }
+.vhead p { margin: 6px 0 0; color: var(--ink-2); max-width: 70ch; }
+.tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tools input[type="search"] { height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); padding: 0 12px; min-width: 220px; }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.chip { border: 0; background: none; border-radius: 9px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); }
+
+/* Tables */
+.tablebox { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th > button { all: unset; display: block; padding: 11px 14px; cursor: pointer; }
+th > button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+th[aria-sort] > button::after { content: ""; display: inline-block; width: 11px; height: 11px; margin-left: 4px; vertical-align: -1px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat; }
+th[aria-sort="ascending"] > button::after { transform: rotate(180deg); }
+th.plain { padding: 11px 14px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child > td { border-bottom: 0; }
+.r { text-align: right; }
+th.r > button { text-align: right; }
+tr.click { cursor: pointer; }
+tr.click:hover > td { background: var(--soft); }
+tr.open > td { background: var(--lime-soft); }
+.zero { color: var(--muted); }
+.warnnum { color: var(--warn); font-weight: 600; }
+.badnum { color: var(--bad); font-weight: 600; }
+.person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.person b { display: block; font-weight: 600; white-space: nowrap; }
+.person small { display: block; color: var(--muted); font-size: 12.5px; }
+.bar { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.track { flex: 1; display: block; height: 6px; border-radius: 3px; background: var(--soft); overflow: hidden; min-width: 56px; }
+.fill { display: block; height: 100%; border-radius: 3px; background: var(--ink); }
+.caret { display: inline-block; color: var(--muted); transition: transform .15s; }
+tr.open .caret { transform: rotate(90deg); }
+.detail > td { padding: 0; background: var(--ground); }
+.dpanel { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px 18px; margin: 0; }
+.facts dt { font-size: 12px; color: var(--muted); }
+.facts dd { margin: 2px 0 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mods { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 8px 18px; }
+.mod { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+h3.sec { margin: 0; font-size: 14px; font-weight: 600; }
+.hwtable { background: var(--panel); border-radius: var(--r); }
+.hwtable td { font-size: 13.5px; }
+.hwtable tr.none td { color: var(--muted); }
+.sub2 { display: block; font-size: 12px; color: var(--muted); }
+.flinks { display: flex; flex-direction: column; gap: 3px; }
+.flinks a { overflow-wrap: anywhere; }
+.gradebox > td { background: var(--ground); padding: 8px 14px 14px; }
+
+/* Lessons */
+.insight { margin: 0; font-size: 15px; color: var(--ink-2); }
+.insight b { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); padding: 0 18px 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .cell { width: 13px; height: 13px; border-radius: 4px; }
+.mapwrap { position: relative; overflow: auto; max-height: calc(100vh - 150px); margin: 0 18px 18px; border: 1px solid var(--line); border-radius: var(--r); }
+.map { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1000px; table-layout: fixed; font-size: 13px; }
+.map th, .map td { border: 0; padding: 4px 3px; }
+.map td { text-align: center; }
+.map td .cell { margin: 0 auto; }
+.map thead th { position: sticky; z-index: 2; background: var(--panel); }
+.map thead tr.modhead th { top: 0; height: 28px; padding: 6px 8px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map thead tr.lessons th { top: 28px; vertical-align: bottom; padding: 6px 2px 8px; text-align: center; font-size: 11px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--line); overflow: hidden; white-space: normal; }
+.map .modstart { border-left: 1px solid var(--line); }
+.lh small { display: block; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.lh .lt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.25; }
+.map .namecol { position: sticky; left: 0; z-index: 1; background: var(--panel); text-align: left; padding-left: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map thead .namecol { z-index: 3; }
+.map tbody th.namecol { font-weight: 500; color: var(--ink); }
+.map tbody tr.mrow:hover > * { background: var(--soft); }
+.map tr.cohrow > th { position: sticky; left: 0; text-align: left; padding: 14px 12px 6px; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--panel); }
+.map tr.cohrow > th small { margin-left: 8px; color: var(--muted); font-weight: 500; }
+.map td.cnt { padding: 4px 12px 4px 8px; color: var(--muted); white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+.cell { display: block; width: 22px; height: 22px; border-radius: 6px; background: var(--soft); border: 0; padding: 0; }
+button.cell { cursor: pointer; }
+button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cell.done { background: var(--ink); opacity: .5; }
+.cell.passed { background: var(--ok); }
+.cell.processing { background: var(--warn); }
+.cell.failed { background: var(--bad); }
+.tip { position: absolute; z-index: 3; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 10px; font-size: 12.5px; max-width: 17rem; }
+.tip b, .tip span { display: block; }
+
+.toast { position: fixed; z-index: 20; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 8px; background: var(--primary); color: var(--primary-ink); padding: 11px 16px; border-radius: 12px; font-weight: 600; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+
+@media (max-width: 1180px) {
+  .home-grid { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .shell::before { display: none; }
+  .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); gap: 12px; overflow: visible; }
+  .navgroup.views { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .navgroup.views .glabel, .navgroup.coh-group .glabel { display: none; }
+  .nav { flex: none; padding: 8px 12px; }
+  .cohorts { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+  .coh { width: auto; padding: 6px 10px; }
+  .coh .cn { margin-left: 2px; }
+  .side-foot { margin-top: 0; flex-direction: row; align-items: center; justify-content: space-between; padding: 8px 10px; }
+  .side-foot .btn.block { width: auto; }
+  .main { padding: 0 max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
+  .topbar { position: static; }
+  .today { display: none; }
+  .search { max-width: none; }
+  .inbox-body { grid-template-columns: minmax(0, 1fr); }
+  .qlist { border-right: 0; border-bottom: 1px solid var(--line); max-height: 260px; }
+  h1 { font-size: 25px; }
+  .hide-narrow { display: none; }
+}
+.phone-only, .kpi .ks, .sheet-back { display: none; }
+
+/* Phone (iPhone widths): compact header, bottom tab bar, KPI strip, list rows instead of tables, grader as a full-screen sheet. */
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .phone-only { display: inline; }
+  h1 { font-size: 28px; letter-spacing: -.02em; }
+  .btn.small { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+
+  /* Header */
+  .side { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "logo foot" "coh coh"; align-items: center; gap: 10px 12px; padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
+  .logo { grid-area: logo; padding: 0; gap: 9px; min-width: 0; }
+  .mark { width: 32px; height: 32px; border-radius: 9px; font-size: 10px; }
+  .logo b { font-size: 16px; white-space: nowrap; }
+  .logo div span { display: none; }
+  .navgroup.coh-group { grid-area: coh; }
+  .cohorts { display: none; }
+  .coh-select { display: block; height: 44px; border-radius: 12px; font-size: 16px; padding: 0 12px; }
+  .side-foot { grid-area: foot; margin: 0; padding: 0; background: none; flex-direction: row; align-items: center; gap: 8px; min-width: 0; }
+  .sync { font-size: 12px; color: var(--muted); min-width: 0; }
+  #updated { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side-foot .rtext { display: none; }
+  .side-foot .btn { width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 12px; flex: none; }
+
+  /* Bottom tab bar */
+  .navgroup.views { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; overflow: visible; padding: 5px max(6px, env(safe-area-inset-right, 0px)) calc(5px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--panel) 86%, transparent); -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px); border-top: 1px solid var(--line); }
+  .nav { position: relative; flex-direction: column; justify-content: center; gap: 3px; min-height: 50px; padding: 5px 2px 3px; border-radius: 10px; font-size: 11px; font-weight: 600; line-height: 1.1; text-align: center; color: var(--muted); -webkit-tap-highlight-color: transparent; }
+  .nav .ico { width: 24px; height: 24px; stroke-width: 1.7; }
+  .nav:hover { background: none; color: var(--muted); }
+  .nav[aria-current="page"], .nav[aria-current="page"]:hover { background: none; color: var(--ink); }
+  .nav[aria-current="page"] .ico { stroke-width: 2.2; }
+  .nav .ncount { display: none; }
+  .nav .ncount.hot, :root .nav[aria-current="page"] .ncount.hot { display: block; position: absolute; top: 1px; left: calc(50% + 5px); margin: 0; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 19px; background: var(--warn); color: var(--on-status); box-shadow: 0 0 0 2px var(--panel); }
+
+  /* Main column */
+  .main { gap: 14px; padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(92px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .topbar { padding-block: 12px 0; }
+  .search input { height: 44px; font-size: 16px; }
+  .field input, .field textarea, .tools input[type="search"] { font-size: 16px; }
+  .vhead p { font-size: 14px; }
+  .tools { width: 100%; }
+  .tools input[type="search"] { flex: 1 1 100%; min-width: 0; height: 44px; border-radius: 12px; }
+  .chips { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .chip { min-height: 36px; padding: 6px 4px; }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  html.sheet-open .toast { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+  .chead { padding: 14px 16px 10px; }
+
+  /* Greeting + KPI strip */
+  .greet { gap: 14px; }
+  .greet-text { display: block; }
+  .greet-text h1 { font-size: 28px; margin-bottom: 4px; }
+  .greet-actions { width: 100%; }
+  .greet-actions .btn { width: 100%; min-height: 50px; border-radius: 14px; font-size: 16px; }
+  .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; padding: 4px 8px; background: var(--panel); border-radius: var(--r-lg); box-shadow: var(--shadow); }
+  .kpi { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; background: none; box-shadow: none; border-radius: 0; text-align: center; }
+  .kpi + .kpi { border-left: 1px solid var(--line); }
+  .kval { order: 1; font-size: 24px; min-width: 0; }
+  .kval small { font-size: 13px; }
+  .khead { order: 2; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .khead .ico, .kpi .kl, .ksub, .mini, .meter { display: none; }
+  .kpi .ks { display: inline; }
+
+  /* Queue list; the selected submission opens as a full-screen sheet */
+  .inbox-body { display: block; min-height: 0; }
+  .qlist { max-height: none; border: 0; padding: 4px 8px 8px; }
+  .qrow { min-height: 62px; grid-template-columns: 40px minmax(0, 1fr) auto 10px; gap: 12px; padding: 10px 8px; -webkit-tap-highlight-color: transparent; }
+  .qrow::after { content: ""; width: 8px; height: 8px; border-top: 2px solid var(--none); border-right: 2px solid var(--none); transform: rotate(45deg); justify-self: start; }
+  .qrow .av { width: 40px; height: 40px; }
+  .qrow b { font-size: 15.5px; }
+  .qrow:active { background: var(--soft); }
+  .inbox-body > .qdetail { display: none; }
+  .inbox-body > .qdetail.sheet { display: flex; position: fixed; z-index: 30; inset: 0; gap: 16px; overflow-y: auto; overscroll-behavior: contain; background: var(--panel); padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes sheet-in { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+  html.sheet-open, html.sheet-open body { overflow: hidden; }
+  .qdetail.sheet .dhead { position: sticky; top: 0; z-index: 2; gap: 8px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px 6px; background: color-mix(in srgb, var(--panel) 88%, transparent); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom: 1px solid var(--line); }
+  .qdetail.sheet .dhead .av { display: none; }
+  .sheet-back { display: inline-flex; flex: none; gap: 0; border: 0; background: none; padding: 8px 6px 8px 2px; font-size: 16px; font-weight: 500; }
+  .sheet-back .ico { width: 24px; height: 24px; }
+  .dhead .who { flex: 1 1 auto; }
+  .dhead b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dhead small { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
+  .dhead .nav-btns { gap: 4px; }
+  .dhead .nav-btns .btn { width: 40px; padding: 0; }
+  .dhead .nav-btns .muted { font-size: 12px !important; white-space: nowrap; margin-right: 2px; }
+  .lesson-line { font-size: 18px; }
+  .file { min-height: 58px; }
+  .grader { padding: 14px; }
+  .choices { grid-template-columns: minmax(0, 1fr); }
+  .choice { min-height: 58px; }
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+  .gactions { flex-direction: column; align-items: stretch; gap: 8px; }
+  .gactions .btn { width: 100%; min-height: 50px; border-radius: 14px; font-size: 16px; }
+  .gactions .hint { text-align: center; }
+  .keys { display: none; }
+
+  /* Rail: shorter lists on a phone */
+  .flist .fitem:nth-child(n+4) { display: none; }
+  .alist li:nth-child(n+6) { display: none; }
+
+  /* Tables become list rows */
+  #members-list thead, #lessons-list thead, #uploads-list thead, .hwtable thead { display: none; }
+  #members-list table, #members-list tbody, #lessons-list table, #lessons-list tbody, #uploads-list table, #uploads-list tbody, .hwtable table, .hwtable tbody { display: block; }
+  #members-list tbody > tr > td, #lessons-list tbody > tr > td, #uploads-list tbody > tr > td, .hwtable tbody > tr > td { display: block; padding: 0; border: 0; background: none; }
+  #members-list tbody > tr, #lessons-list tbody > tr, #uploads-list tbody > tr { border-bottom: 1px solid var(--line); }
+  #members-list tbody > tr:last-child, #lessons-list tbody > tr:last-child, #uploads-list tbody > tr:last-child { border-bottom: 0; }
+  td.c-stat { display: inline-flex !important; align-items: center; padding: 2px 9px !important; border-radius: 999px; background: var(--soft) !important; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  td.c-stat::after { content: "\00a0" attr(data-label); font-weight: 500; }
+  td.c-stat.warnnum { background: var(--warn-soft) !important; color: var(--warn); }
+  td.c-stat.badnum { background: var(--bad-soft) !important; color: var(--bad); }
+  td.c-stat.oknum { background: var(--ok-soft) !important; color: var(--ok); }
+
+  #members-list td.hide-narrow, #lessons-list td.hide-narrow, .hwtable td.hide-narrow { display: none !important; }
+  #members-list tr.click { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 14px 12px 58px; -webkit-tap-highlight-color: transparent; }
+  #members-list tr.click::after { content: ""; order: 2; flex: none; width: 8px; height: 8px; margin: 0 4px 0 2px; border-top: 2px solid var(--none); border-right: 2px solid var(--none); transform: rotate(45deg); transition: transform .15s; }
+  #members-list tr.click.open::after { transform: rotate(135deg); }
+  #members-list td.c-coh { order: 1; }
+  #members-list td.c-prog, #members-list td.c-stat, #members-list td.c-login { order: 3; }
+  #members-list tr.click:active, #members-list tr.open { background: var(--lime-soft); }
+  #members-list tr.click:hover > td { background: none; }
+  #members-list td.c-person { flex: 1 1 0; min-width: 0; margin-left: -44px; }
+  #members-list .person .caret { display: none; }
+  #members-list .person b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; }
+  #members-list .person small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #members-list td.c-coh { flex: none; padding: 2px 8px; border-radius: 999px; background: var(--soft); font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  #members-list td.c-prog { flex: 1 1 100%; }
+  #members-list td.c-prog .bar { min-width: 0; font-size: 12.5px; color: var(--muted); }
+  #members-list td.c-prog .bar > span:last-child::after { content: " lessons"; }
+  #members-list td.c-stat.zero { display: none !important; }
+  #members-list td.c-login.is-no { display: inline-flex !important; padding: 2px 9px; border-radius: 999px; background: var(--bad-soft); font-size: 12.5px; }
+  #members-list tr.detail, #members-list tr.detail > td { display: block; }
+  .dpanel { padding: 14px; gap: 14px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+  .facts > div:first-child { grid-column: 1 / -1; }
+  .facts dd { white-space: normal; overflow-wrap: anywhere; }
+  .hwtable tr.hwrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "a b" "s t" "f f"; align-items: center; gap: 6px 10px; padding: 12px; border-bottom: 1px solid var(--line); }
+  .hwtable tr.hwrow:last-child { border-bottom: 0; }
+  .hwtable td.c-a { grid-area: a; font-weight: 600; }
+  .hwtable td.c-b { grid-area: b; }
+  .hwtable td.c-s { grid-area: s; }
+  .hwtable td.c-t { grid-area: t; font-size: 12.5px; color: var(--muted); }
+  .hwtable td.c-f { grid-area: f; }
+  .hwtable td.c-f:empty, .hwtable td.c-t:empty { display: none; }
+  .hwtable tr.none td.c-s { display: none; }
+  tr.gradebox, tr.gradebox > td { display: block; }
+  .gradebox > td { padding: 0 10px 12px !important; }
+
+  #lessons-list tr.lrow { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
+  #lessons-list td.c-a { flex: 1 1 100%; font-weight: 600; margin-bottom: 2px; }
+  #lessons-list td.c-stat.zero:not(.keep) { display: none !important; }
+  .legend { padding: 0 16px 10px; }
+  .mapwrap { margin: 0 12px 12px; max-height: 70vh; -webkit-overflow-scrolling: touch; }
+  .map { min-width: 720px; }
+  .map thead tr.lessons th { font-size: 10.5px; }
+  .map col:first-child { width: 112px !important; }
+  .map col:last-child { width: 52px !important; }
+  .map .namecol { padding-left: 10px; font-size: 12.5px; }
+  .map tr.cohrow > th small { display: block; margin: 2px 0 0; }
+
+  #uploads-list tr.urow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "p s" "l t" "f f" "d b"; align-items: center; gap: 8px 10px; padding: 14px 14px 14px 58px; }
+  #uploads-list td.c-p { grid-area: p; min-width: 0; margin-left: -44px; }
+  #uploads-list td.c-p b { overflow: hidden; text-overflow: ellipsis; }
+  #uploads-list td.c-s { grid-area: s; }
+  #uploads-list td.c-l { grid-area: l; font-weight: 600; }
+  #uploads-list td.c-t { grid-area: t; font-size: 12.5px; color: var(--muted); }
+  #uploads-list td.c-f { grid-area: f; }
+  #uploads-list td.c-d { display: block; grid-area: d; font-size: 12.5px; color: var(--muted); }
+  #uploads-list td.c-b { grid-area: b; }
+  .flinks { gap: 6px; }
+  .linkbtn { padding: 2px 0; }
+
+  /* File viewer fills the screen */
+  .viewer { height: 100dvh; max-height: 100dvh; }
+  .vhd { padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 10px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+</head><body><div class="shell">
+  <aside class="side" aria-label="Dashboard navigation">
+    <div class="logo">
+      <span class="mark" aria-hidden="true">BTW</span>
+      <div><b>Built to Win</b><span>60-Day Challenge homework</span></div>
+    </div>
+    <nav class="navgroup views" aria-label="Views">
+      <p class="glabel">Workspace</p>
+      <a class="nav" href="#grade" data-view="grade" id="nav-grade"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Grading queue<span class="ncount" id="n-grade">0</span></a>
+      <a class="nav" href="#members" data-view="members" id="nav-members"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Members<span class="ncount" id="n-members">0</span></a>
+      <a class="nav" href="#lessons" data-view="lessons" id="nav-lessons"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Lessons<span class="ncount" id="n-lessons">0</span></a>
+      <a class="nav" href="#uploads" data-view="uploads" id="nav-uploads"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Uploads<span class="ncount" id="n-uploads">0</span></a>
+    </nav>
+    <div class="navgroup coh-group">
+      <p class="glabel" id="coh-label">Cohort</p>
+      <div class="cohorts" id="cohorts" role="radiogroup" aria-labelledby="coh-label"></div>
+      <select class="coh-select" id="coh-select" aria-label="Cohort"></select>
+    </div>
+    <div class="side-foot">
+      <div class="sync"><span class="dot" id="sync-dot"></span><span id="updated">Not loaded yet</span></div>
+      <button type="button" class="btn small block" id="refresh"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg><span class="rtext">Refresh from GoHighLevel</span></button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="search">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="q" placeholder="Search members or files" aria-label="Search members or files" autocomplete="off">
+        <div class="results" id="results" hidden></div>
+      </div>
+      <span class="today" id="today"></span>
+    </header>
+
+    <div class="banner" id="banner" role="status" hidden></div>
+
+    <section class="view" id="view-grade" aria-labelledby="hello">
+      <div class="greet">
+        <div class="greet-text">
+          <h1 id="hello">Hello</h1>
+          <p class="summary" id="summary">Loading the cohort from GoHighLevel…</p>
+        </div>
+        <div class="greet-actions">
+          <button type="button" class="btn primary" id="start"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Start grading</button>
+        </div>
+      </div>
+
+      <div class="kpis" aria-label="Cohort totals">
+        <article class="kpi">
+          <div class="khead"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span class="kl">Waiting on review</span><span class="ks">Waiting</span></div>
+          <div class="ksub" id="k1-sub">&nbsp;</div>
+          <div class="kval" id="k1"><span class="skel"></span></div>
+          <div class="mini" id="k1-bars" role="img" aria-label="Homework turned in per day, last 7 days"></div>
+        </article>
+        <article class="kpi">
+          <div class="khead"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="kl">Graded</span><span class="ks">Graded</span></div>
+          <div class="ksub" id="k2-sub">&nbsp;</div>
+          <div class="kval" id="k2"><span class="skel"></span></div>
+          <div class="meter" id="k2-meter" role="img" aria-label="Share of turned-in homework graded"></div>
+        </article>
+        <article class="kpi">
+          <div class="khead"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="kl">Course progress</span><span class="ks">Progress</span></div>
+          <div class="ksub" id="k3-sub">&nbsp;</div>
+          <div class="kval" id="k3"><span class="skel"></span></div>
+        </article>
+        <article class="kpi">
+          <div class="khead"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span class="kl">Need a follow-up</span><span class="ks">Follow-up</span></div>
+          <div class="ksub" id="k4-sub">&nbsp;</div>
+          <div class="kval" id="k4"><span class="skel"></span></div>
+        </article>
+      </div>
+
+      <div class="home-grid">
+        <section class="card" id="inbox-card" aria-labelledby="inbox-h">
+          <div class="chead">
+            <div>
+              <h2 id="inbox-h"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Grading queue <span class="chip-n" id="inbox-n">0</span></h2>
+              <p>Oldest first. Saving a grade moves you to the next one.</p>
+            </div>
+          </div>
+          <div id="inbox"><div class="empty">Loading submissions…</div></div>
+        </section>
+
+        <div class="rail">
+        <section class="card" id="follow-card" aria-labelledby="follow-h">
+          <div class="chead">
+            <div>
+              <h2 id="follow-h"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Needs follow-up</h2>
+              <p>Members to nudge, most urgent first.</p>
+            </div>
+          </div>
+          <div id="follow"><div class="empty">Loading members…</div></div>
+        </section>
+      <section class="card" id="activity-card" aria-labelledby="act-h">
+        <div class="chead">
+          <div>
+            <h2 id="act-h"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Activity</h2>
+            <p>Lessons finished and homework graded. Click a row to open it.</p>
+          </div>
+        </div>
+        <div id="activity"><div class="empty">Loading activity…</div></div>
+      </section>
+        </div>
+      </div>
+
+
+    </section>
+
+    <section class="view" id="view-members" aria-labelledby="members-h" hidden>
+      <div class="vhead">
+        <div>
+          <h1 id="members-h">Members</h1>
+          <p>Open a member to see their module progress, every assignment, their files, and grading.</p>
+        </div>
+        <div class="tools"><input type="search" id="m-search" placeholder="Filter by name or email" aria-label="Filter members"></div>
+      </div>
+      <div class="card tablebox" id="members-list"><div class="empty">Loading members…</div></div>
+    </section>
+
+    <section class="view" id="view-lessons" aria-labelledby="lessons-h" hidden>
+      <div class="vhead">
+        <div>
+          <h1 id="lessons-h">Lessons</h1>
+          <p class="insight" id="insight">Loading lessons…</p>
+        </div>
+      </div>
+      <section class="card" aria-labelledby="map-h">
+        <div class="chead"><div><h2 id="map-h">Lesson map</h2><p>One row per member, grouped by cohort; one column per lesson. Hover or tap a square for details; click a colored square to grade it.</p></div></div>
+        <div class="legend">
+          <span><i class="cell"></i>Not done</span>
+          <span><i class="cell done"></i>Lesson done</span>
+          <span><i class="cell passed"></i>Passed</span>
+          <span><i class="cell processing"></i>Waiting on review</span>
+          <span><i class="cell failed"></i>Redo</span>
+        </div>
+        <div class="mapwrap" id="map"><div class="empty">Loading the lesson map…</div></div>
+      </section>
+      <section class="card tablebox" id="lessons-list" aria-label="Homework counts by lesson"><div class="empty">Loading lessons…</div></section>
+    </section>
+
+    <section class="view" id="view-uploads" aria-labelledby="uploads-h" hidden>
+      <div class="vhead">
+        <div>
+          <h1 id="uploads-h">Uploads</h1>
+          <p>One row per homework try, with every file attached. Open a file name to view it here.</p>
+        </div>
+        <div class="tools">
+          <div class="chips" role="group" aria-label="Filter by status">
+            <button type="button" class="chip" data-f="" aria-pressed="true">All</button>
+            <button type="button" class="chip" data-f="processing" aria-pressed="false">Waiting</button>
+            <button type="button" class="chip" data-f="passed" aria-pressed="false">Passed</button>
+            <button type="button" class="chip" data-f="failed" aria-pressed="false">Redo</button>
+          </div>
+          <input type="search" id="u-search" placeholder="Filter name, lesson or file" aria-label="Filter uploads">
+        </div>
+      </div>
+      <div class="card tablebox" id="uploads-list"><div class="empty">Loading uploads…</div></div>
+    </section>
+  </div>
+</div>
+
+<dialog class="viewer" id="viewer" aria-labelledby="v-title"></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const CFG = {
+    server: 'Gohighlevel',
+    tool: 'execute_operation',
+    location: 'zQh0YM3EIsWgcjMDTSSC',
+    product: '98cd5237-5b95-499b-8e77-14140c996169',
+    pipeline: 'nGIAQVABxlvvZMqqO7pd',
+    // Left out at Nick's request: Craig Cooper, Joseph Sanchez (Nov 3 2026); duplicate Roland Ochoa with no email, Pk3HzlFGjZyLtxe9Tw7Q (Nov 4 2026).
+    exclude: new Set(['l9TcRfVUZeFMTCdlvilP', 'jVvHyoRHiv5NRUOLffZ6', 'Pk3HzlFGjZyLtxe9Tw7Q']),
+    defaultCohort: 'all',
+    autoRefreshMs: 5 * 60 * 1000,
+    quietDays: 3,
+  };
+
+  const S = {
+    mcp: null, loading: false, loadedAt: null, cohort: CFG.defaultCohort, view: 'grade', sheet: false,
+    roster: [], course: [], modules: [], assess: [],
+    rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(),
+    err: {}, drafts: {}, opened: new Set(), mirror: new Map(), sel: null, openMember: null, openGrade: null,
+    mSearch: '', uSearch: '', uFilter: '',
+    sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' } },
+  };
+
+  // ---------- helpers ----------
+  const $ = (s, r) => (r || document).querySelector(s);
+  function h(tag, attrs) {
+    const el = document.createElement(tag);
+    if (attrs) for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : String(v));
+    }
+    for (let i = 2; i < arguments.length; i++) for (const k of [].concat(arguments[i])) {
+      if (k == null || k === false) continue;
+      el.append(k instanceof Node ? k : document.createTextNode(String(k)));
+    }
+    return el;
+  }
+  const ICONS = {
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    redo: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+    open: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    up: '<path d="m18 15-6-6-6 6"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    clip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+    chev: '<path d="m9 18 6-6-6-6"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    left: '<path d="m15 18-6-6 6-6"/>',
+    right: '<path d="m9 18 6-6-6-6"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  };
+  const phoneMQ = window.matchMedia('(max-width: 640px)');
+  const isPhone = () => phoneMQ.matches;
+  // On a phone the grader opens as a full-screen sheet over the queue list.
+  function syncSheet() { document.documentElement.classList.toggle('sheet-open', !!(S.sheet && D && D.queue.length && S.view === 'grade')); }
+  function closeSheet() {
+    S.sheet = false;
+    renderInbox();
+    const row = document.getElementById('qr-' + S.sel);
+    if (row) { row.scrollIntoView({ block: 'center' }); row.focus({ preventScroll: true }); }
+  }
+  function sheetTop() { const sh = document.querySelector('.qdetail.sheet'); if (sh) sh.scrollTop = 0; }
+  function icon(name) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('class', 'ico');
+    s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = ICONS[name] || '';
+    return s;
+  }
+  const fmtInt = (n) => Number(n || 0).toLocaleString('en-US');
+  const fmtPct = (x) => Math.round((x || 0) * 100) + '%';
+  const fmtWhen = (s) => s ? new Date(s).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+  const fmtDay = (s) => s ? new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  function ago(s) {
+    if (!s) return '';
+    const m = Math.max(0, Math.round((Date.now() - new Date(s).getTime()) / 60000));
+    if (m < 60) return m + 'm';
+    const hrs = Math.floor(m / 60);
+    if (hrs < 24) return hrs + 'h';
+    const d = Math.floor(hrs / 24), rh = hrs % 24;
+    return d + 'd' + (rh && d < 3 ? ' ' + rh + 'h' : '');
+  }
+  const daysSince = (s) => s ? Math.floor((Date.now() - new Date(s).getTime()) / 86400000) : null;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  function shortTitle(t) {
+    const m = /^DAY\s*(\d+)\s*\.\s*([A-Za-z]+)/.exec(t || '');
+    if (m) return 'Day ' + m[1] + ' · ' + cap(m[2]);
+    return (t || '').length > 36 ? t.slice(0, 34) + '…' : (t || '');
+  }
+  function initials(name) {
+    const p = String(name || '?').trim().split(/\s+/);
+    return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+  }
+  const avatar = (name, cls) => h('span', { class: 'av' + (cls ? ' ' + cls : ''), 'aria-hidden': 'true' }, initials(name));
+  const ST = { passed: { label: 'Passed', cls: 'ok' }, processing: { label: 'Waiting on review', cls: 'warn' }, failed: { label: 'Redo', cls: 'bad' } };
+  const pill = (status, text) => { const s = ST[status] || { label: 'Not turned in', cls: 'none' }; return h('span', { class: 'pill ' + s.cls, text: text || s.label }); };
+  const extOf = (t) => { const m = /\.([a-z0-9]{2,5})$/i.exec(t || ''); return m ? m[1].toUpperCase() : 'FILE'; };
+  function midTrunc(t, n) {
+    t = String(t || '');
+    if (t.length <= n) return t;
+    const dot = t.lastIndexOf('.');
+    const ext = dot > 0 && t.length - dot <= 6 ? t.slice(dot) : '';
+    const keep = n - ext.length - 1;
+    const head = Math.ceil(keep * 0.6);
+    return t.slice(0, head) + '…' + t.slice(t.length - ext.length - (keep - head), t.length - ext.length) + ext;
+  }
+  function fmtPhone(p) {
+    const d = String(p || '').replace(/\D/g, '');
+    const t = d.length === 11 && d[0] === '1' ? d.slice(1) : d;
+    return t.length === 10 ? '(' + t.slice(0, 3) + ') ' + t.slice(3, 6) + '-' + t.slice(6) : (p || '');
+  }
+  const firstName = (n) => String(n || '').trim().split(/\s+/)[0] || 'this member';
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('#toast');
+    t.replaceChildren(icon('check'), h('span', null, msg));
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 4000);
+  }
+
+  // ---------- errors ----------
+  function ghlDetail(e) {
+    let text = '';
+    try {
+      const blocks = e && e.result && e.result.content;
+      const tb = Array.isArray(blocks) ? blocks.find((b) => b && b.type === 'text') : null;
+      text = (tb && tb.text) || (e && e.message) || '';
+    } catch (_) { text = (e && e.message) || ''; }
+    try {
+      const j = JSON.parse(text);
+      return { status: Number(j.status) || null, message: (j.data && j.data.error && j.data.error.message) || j.error || text };
+    } catch (_) {
+      const m = /"status"\s*:\s*(\d{3})/.exec(text);
+      return { status: m ? Number(m[1]) : null, message: text };
+    }
+  }
+  function errorText(e) {
+    switch (e && e.code) {
+      case 'needs_reauth': return 'Your GoHighLevel connection expired. Reconnect Gohighlevel in claude.ai Settings → Connectors, then press Refresh.';
+      case 'server_not_connected':
+      case 'server_not_found': return 'GoHighLevel is not connected to your claude.ai account. Add Gohighlevel in claude.ai Settings → Connectors, then press Refresh.';
+      case 'selection_required': return 'You have more than one GoHighLevel connector. Choose one in the prompt claude.ai shows, then press Refresh.';
+      case 'not_in_manifest':
+      case 'consent_required': return 'GoHighLevel is turned off for this page. Allow it from this page’s Permissions menu, then press Refresh.';
+      case 'blocked_by_policy': return 'Your organization blocks GoHighLevel on this page.';
+      case 'approval_required': return 'Your organization requires approval for each GoHighLevel call, which this page cannot ask for.';
+      case 'not_granted':
+      case 'capability_disabled':
+      case 'capability_removed': return 'This view cannot reach your connectors. Open the page in claude.ai.';
+      case 'server_unavailable':
+      case 'rate_limited': return 'GoHighLevel did not answer in time. Press Refresh to try again.';
+      case 'tool_error': return 'GoHighLevel refused the request: ' + ghlDetail(e).message;
+      default: return 'GoHighLevel call failed: ' + ((e && e.message) || 'unknown error');
+    }
+  }
+  const PAGE_LEVEL = new Set(['needs_reauth', 'server_not_connected', 'server_not_found', 'selection_required', 'not_in_manifest', 'consent_required', 'blocked_by_policy', 'approval_required', 'not_granted', 'capability_disabled', 'capability_removed']);
+  function banner(kind, text) {
+    const b = $('#banner');
+    if (!text) { b.hidden = true; return; }
+    b.hidden = false;
+    b.className = 'banner ' + kind;
+    b.replaceChildren(icon('alert'), h('span', null, text));
+  }
+  function syncState(kind, text) {
+    $('#sync-dot').className = 'dot ' + kind;
+    $('#updated').textContent = text;
+  }
+
+  // ---------- GoHighLevel ----------
+  async function ghl(operationId, params, reason, opts) {
+    opts = opts || {};
+    const input = { operationId, locationId: CFG.location, params, reason };
+    if (opts.idempotencyKey) input.idempotencyKey = opts.idempotencyKey;
+    let tries = 0;
+    for (;;) {
+      try {
+        const res = await S.mcp.callTool(CFG.server, CFG.tool, input, opts.write ? { cache: false } : undefined);
+        let p = res && res.payload !== undefined ? res.payload : res;
+        if (typeof p === 'string') { try { p = JSON.parse(p); } catch (_) { /* text */ } }
+        if (p && typeof p === 'object' && p.success === false) {
+          const err = new Error((p.data && p.data.error && p.data.error.message) || p.error || 'GoHighLevel refused the request');
+          err.code = 'tool_error'; err.ghlStatus = p.status;
+          throw err;
+        }
+        return p && typeof p === 'object' && p.data !== undefined ? p.data : p;
+      } catch (e) {
+        if (!opts.write && e && e.retryable && tries === 0) { tries++; await sleep(Math.min(e.retryAfterMs || 0, 8000) + 400 + Math.random() * 600); continue; }
+        throw e;
+      }
+    }
+  }
+  const statusOf = (e) => (e && e.ghlStatus) || ghlDetail(e).status;
+  async function pageAll(op, key, reason) {
+    const out = [];
+    for (let page = 1; page <= 40; page++) {
+      const d = await ghl(op, { path: { productId: CFG.product }, query: { pageNumber: page, pageSize: 50 } }, reason);
+      const got = (d && d[key]) || [];
+      out.push(...got);
+      const total = Number(d && d.totalCount) || 0;
+      if (!got.length || (total && out.length >= total) || got.length < 50) break;
+    }
+    return out;
+  }
+  async function cursorAll(op, key, reason) {
+    const out = [];
+    let cursor = null;
+    for (let i = 0; i < 40; i++) {
+      const q = { limit: 50 };
+      if (cursor) q.cursor = cursor;
+      const d = await ghl(op, { path: { productId: CFG.product }, query: q }, reason);
+      out.push(...((d && d[key]) || []));
+      cursor = d && d.nextCursor;
+      if (!cursor) break;
+    }
+    return out;
+  }
+  async function loadWon() {
+    const body = { locationId: CFG.location, limit: 100, filters: [{ field: 'pipeline_id', operator: 'eq', value: CFG.pipeline }, { field: 'status', operator: 'eq', value: 'won' }] };
+    const list = [];
+    let d = await ghl('search-opportunities-advanced', { body }, 'List paid Built to Win members');
+    list.push(...((d && d.opportunities) || []));
+    const total = Number(d && d.total) || list.length;
+    for (let i = 0; list.length < total && i < 10; i++) {
+      d = await ghl('search-opportunities-advanced', { body: Object.assign({}, body, { searchAfter: list[list.length - 1].sort }) }, 'List paid Built to Win members, next page');
+      const got = (d && d.opportunities) || [];
+      if (!got.length) break;
+      list.push(...got);
+    }
+    const seen = new Set(), roster = [];
+    for (const o of list) {
+      const m = /^C(\d+)\s*-\s*(.+)$/.exec(String(o.name || '').trim());
+      if (!m || !o.contactId || seen.has(o.contactId) || CFG.exclude.has(o.contactId)) continue;
+      seen.add(o.contactId);
+      const c = o.contact || {};
+      roster.push({ contactId: o.contactId, name: String(c.name || '').trim() || m[2].trim(), email: c.email || '', phone: c.phone || '', cohort: 'C' + m[1], wonAt: o.lastStatusChangeAt || null });
+    }
+    return roster.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  async function pool(items, n, fn) {
+    let i = 0;
+    const run = async () => { while (i < items.length) { const it = items[i++]; await fn(it); } };
+    await Promise.all(Array.from({ length: Math.min(n, items.length) }, run));
+  }
+  async function loadTimes(ids) {
+    await pool(ids.filter((id) => !S.times.has(id)), 6, async (id) => {
+      if (S.enrollOk && !S.enroll.has(id)) { S.times.set(id, 'none'); return; }
+      try {
+        const d = await ghl('list-completions', { path: { productId: CFG.product }, query: { contactId: id, pageNumber: 1, pageSize: 50 } }, 'Lessons one member completed');
+        const m = new Map();
+        for (const c of (d && d.completions) || []) m.set(c.lessonId, c.completedAt || null);
+        S.times.set(id, m);
+      } catch (e) {
+        if (statusOf(e) === 404) S.times.set(id, 'none');
+        else if (PAGE_LEVEL.has(e && e.code)) throw e;
+        else S.times.set(id, new Map());
+      }
+    });
+  }
+  // ---------- shared copy ----------
+  // Connectors are per person, so a viewer without GoHighLevel can't load live data.
+  // Whenever someone WITH GoHighLevel loads the page, it saves the full data set into this
+  // artifact's shared database; everyone else opens that copy.
+  const SNAP = { coll: 'snapshot', chunk: 60000 };
+  let dbP = null, lastSnapHash = '';
+  const getDb = () => dbP || (dbP = (window.claude && typeof window.claude.use === 'function') ? Promise.resolve(window.claude.use('db')).catch(() => null) : Promise.resolve(null));
+  async function saveSnapshot() {
+    try {
+      const db = await getDb();
+      if (!db || !S.roster.length || !S.course.length) return;
+      if (S.roster.some((r) => !S.times.has(r.contactId))) await loadTimes(S.roster.map((r) => r.contactId));
+      const snap = { v: 1, roster: S.roster, course: S.course, modules: S.modules, assess: S.assess, rollup: [...S.rollup], enroll: [...S.enroll], enrollOk: S.enrollOk,
+        times: [...S.times].map(([id, v]) => [id, v === 'none' ? 'none' : [...v]]) };
+      const body = JSON.stringify(snap);
+      const ver = await sha16(body);
+      if (ver === lastSnapHash) return;
+      snap.at = new Date().toISOString();
+      const json = JSON.stringify(snap);
+      const n = Math.ceil(json.length / SNAP.chunk);
+      for (let i = 0; i < n; i++) await db.collection(SNAP.coll).doc('p' + i).set({ ver, i, s: json.slice(i * SNAP.chunk, (i + 1) * SNAP.chunk) });
+      await db.collection(SNAP.coll).doc('meta').set({ ver, parts: n, at: snap.at });
+      lastSnapHash = ver;
+    } catch (_) { /* a viewer who can't write simply doesn't refresh the copy */ }
+  }
+  // Shows the viewer exactly why live data didn't load, so a screenshot tells us what to fix.
+  async function addDiag() {
+    if (window.__HOSTED) return;
+    const b = $('#banner');
+    const list = h('ul', { class: 'diag-list' }, h('li', null, 'Checking…'));
+    const retry = S.mcp ? h('button', { type: 'button', class: 'btn small', onclick: () => { S.mode = null; S.snapTried = false; loadAll('manual'); } }, 'Try live again') : null;
+    const perms = h('button', { type: 'button', class: 'btn small', onclick: async () => { try { const pm = await window.claude.use('permissions'); if (pm) await pm.manage(); } catch (_) { toast('Open this page’s Permissions menu in claude.ai.'); } } }, 'Page permissions');
+    const det = h('details', { class: 'diag' }, h('summary', null, 'Why isn’t this live?'), list, h('div', { class: 'diag-act' }, ...[retry, perms].filter(Boolean)));
+    const span = b.querySelector('span');
+    (span || b).append(det);
+    const out = [];
+    if (!S.mcp) out.push('Connectors: claude.ai gives this page no connector access for your account in this view. This happens when you are signed in to a different claude.ai organization than the page owner, or opened it from a public link while signed out.');
+    else {
+      try {
+        const r = await S.mcp.listTools(CFG.server);
+        const sv = (r.servers || []).find((x) => x.server === CFG.server);
+        out.push(sv ? 'Gohighlevel connector: ' + sv.authStatus + ', ' + sv.tools.length + ' tool(s)' + (sv.tools.length && !sv.tools.some((t) => t.name === CFG.tool) ? ', but not ' + CFG.tool + ' (a different GoHighLevel connector than the page uses)' : '') : 'Gohighlevel connector: not found under that exact name in your claude.ai connectors.');
+      } catch (e) { out.push('Gohighlevel connector check failed: ' + ((e && e.code) || (e && e.message) || 'unknown')); }
+    }
+    try { const pm = await window.claude.use('permissions'); if (pm) { const st = await pm.state(); const keys = Object.keys(st).filter((k) => /^mcp/.test(k)); out.push('Page permissions: ' + (keys.length ? keys.map((k) => k + ' = ' + st[k]).join(', ') : 'no connector permission listed')); } } catch (_) { /* optional */ }
+    if (S.liveWhy) out.push('Last GoHighLevel answer: ' + S.liveWhy);
+    list.replaceChildren(...out.map((t) => h('li', null, t)));
+  }
+  async function loadSnapshot() {
+    try {
+      const db = await getDb();
+      if (!db) return false;
+      const q = await db.collection(SNAP.coll).limit(1000).get();
+      const docs = new Map(q.docs.map((d) => [d.id, d.data()]));
+      const meta = docs.get('meta');
+      if (!meta || !meta.parts) return false;
+      let json = '';
+      for (let i = 0; i < meta.parts; i++) { const part = docs.get('p' + i); if (!part || part.ver !== meta.ver) return false; json += part.s; }
+      const snap = JSON.parse(json);
+      S.roster = snap.roster || []; S.course = snap.course || []; S.modules = snap.modules || []; S.assess = snap.assess || [];
+      S.rollup = new Map(snap.rollup || []); S.enroll = new Map(snap.enroll || []); S.enrollOk = !!snap.enrollOk;
+      S.times = new Map((snap.times || []).map(([id, v]) => [id, v === 'none' ? 'none' : new Map(v)]));
+      S.mode = 'snapshot'; S.snapAt = new Date(snap.at || meta.at); S.loadedAt = S.snapAt; S.err = {};
+      const when = S.snapAt.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+      syncState('busy', 'Saved copy · ' + when);
+      banner('', 'Saved copy from ' + when + '. To grade, connect GoHighLevel in your own claude.ai (Settings → Connectors), then reload.');
+      $('#banner').className = 'banner';
+      addDiag();
+      $('#refresh').disabled = false;
+      renderAll();
+      return true;
+    } catch (_) { return false; }
+  }
+
+  async function loadAll(reason) {
+    if (S.mode === 'snapshot') { if (reason !== 'auto' || Date.now() - S.loadedAt.getTime() >= CFG.autoRefreshMs) await loadSnapshot(); return; }
+    if (!S.mcp || S.loading) return;
+    S.loading = true;
+    $('#refresh').disabled = true;
+    syncState('busy', 'Loading from GoHighLevel…');
+    if (reason !== 'auto') banner('', '');
+    S.err = {};
+    const jobs = {
+      won: loadWon(),
+      lessons: ghl('list-lessons', { path: { productId: CFG.product } }, 'List the course lessons'),
+      cats: ghl('list-categories', { path: { productId: CFG.product } }, 'List the course modules'),
+      assess: pageAll('list-assessments', 'assessments', 'List homework submissions'),
+      rollup: pageAll('list-completions', 'completions', 'Lesson progress per member'),
+      enroll: cursorAll('list-enrollments', 'enrollments', 'Who has a course login'),
+    };
+    const keys = Object.keys(jobs);
+    const settled = await Promise.allSettled(keys.map((k) => jobs[k]));
+    const R = {};
+    let pageErr = null;
+    settled.forEach((s, i) => {
+      if (s.status === 'fulfilled') R[keys[i]] = s.value;
+      else { S.err[keys[i]] = errorText(s.reason); if (PAGE_LEVEL.has(s.reason && s.reason.code)) pageErr = s.reason; }
+    });
+    if (pageErr || settled.every((s) => s.status === 'rejected')) {
+      const why = pageErr || settled[0].reason;
+      S.liveWhy = ((why && why.code) || 'error') + ': ' + String(ghlDetail(why).message || '').slice(0, 220);
+      if (!S.snapTried) { S.snapTried = true; S.loading = false; if (await loadSnapshot()) return; }
+      if (pageErr) { S.roster = []; S.assess = []; S.rollup = new Map(); S.enroll = new Map(); S.times = new Map(); }
+      banner('bad', errorText(pageErr || settled[0].reason));
+      addDiag();
+      finishLoad(false);
+      return;
+    }
+    if (R.won) S.roster = R.won;
+    if (R.cats) S.modules = (R.cats.categories || []).map((c) => ({ id: c.id, title: c.title, seq: Number(c.sequenceNo) || 0 }));
+    if (R.lessons) {
+      const mod = new Map(S.modules.map((m) => [m.id, m]));
+      S.course = (R.lessons.lessons || []).filter((l) => l.visibility === 'published').map((l) => {
+        const m = mod.get(l.categoryId) || { title: '', seq: 9 };
+        return { id: l.id, title: l.title, short: shortTitle(l.title), module: m.title, order: m.seq * 100 + (Number(l.sequenceNo) || 0), isAssignment: l.contentType === 'assignment' };
+      }).sort((a, b) => a.order - b.order);
+    }
+    if (R.assess) S.assess = R.assess;
+    if (R.rollup) S.rollup = new Map(R.rollup.map((c) => [c.contactId, { done: Number(c.completedLessons) || 0, total: Number(c.totalLessons) || 0 }]));
+    if (R.enroll) { S.enroll = new Map(R.enroll.map((e) => [e.contactId, e.createdAt || null])); S.enrollOk = true; }
+    S.times = new Map();
+    renderAll();
+    try { await loadTimes(cohortMembers().map((r) => r.contactId)); }
+    catch (e) { if (PAGE_LEVEL.has(e && e.code)) banner('bad', errorText(e)); }
+    if (Object.keys(S.err).length) banner('bad', 'Some data did not load. ' + Object.values(S.err)[0]);
+    finishLoad(true);
+    if (!Object.keys(S.err).length) saveSnapshot();
+  }
+  function finishLoad(ok) {
+    S.loading = false;
+    $('#refresh').disabled = false;
+    if (ok) S.loadedAt = new Date();
+    if (S.loadedAt) syncState(Object.keys(S.err).length ? 'err' : 'live', 'Live · updated ' + S.loadedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
+    else syncState('err', 'Not loaded');
+    renderAll();
+  }
+
+  // ---------- derived ----------
+  const cohortMembers = () => S.cohort === 'all' ? S.roster : S.roster.filter((r) => r.cohort === S.cohort);
+  const cohortName = () => S.cohort === 'all' ? 'all cohorts' : 'Cohort ' + S.cohort.slice(1);
+  function derive() {
+    const members = cohortMembers();
+    const ids = new Set(members.map((r) => r.contactId));
+    const lessonById = new Map(S.course.map((l) => [l.id, l]));
+    const assignments = S.course.filter((l) => l.isAssignment);
+    const rank = { processing: 3, failed: 2, passed: 1 };
+    const latest = new Map(), files = new Map();
+    for (const a of S.assess) {
+      if (!ids.has(a.contactId)) continue;
+      const key = a.contactId + '|' + a.lessonId;
+      const att = Number(a.attempt) || 1;
+      const cur = latest.get(key);
+      if (!cur || att > cur.att || (att === cur.att && (rank[a.status] || 0) > (rank[cur.rec.status] || 0))) latest.set(key, { rec: a, att });
+      const list = files.get(key) || [];
+      for (const f of (a.submission || [])) if (f && f.url && !list.some((x) => x.url === f.url)) list.push({ url: f.url, title: f.title || 'File', attempt: att, assessmentId: a.id, status: a.status });
+      files.set(key, list);
+    }
+    for (const list of files.values()) list.sort((x, y) => y.attempt - x.attempt);
+    const timeOf = (cid, lid) => { const t = S.times.get(cid); return t && t !== 'none' ? (t.get(lid) || null) : null; };
+    const byMember = members.map((r) => {
+      const roll = S.rollup.get(r.contactId);
+      const total = (roll && roll.total) || S.course.length || 14;
+      const done = roll ? roll.done : 0;
+      const hw = assignments.map((l) => latest.get(r.contactId + '|' + l.id)).filter(Boolean);
+      const t = S.times.get(r.contactId);
+      let last = null;
+      if (t && t !== 'none') for (const v of t.values()) if (v && (!last || v > last)) last = v;
+      let nFiles = 0;
+      for (const l of assignments) nFiles += (files.get(r.contactId + '|' + l.id) || []).length;
+      const login = S.enrollOk ? (S.enroll.has(r.contactId) ? 'yes' : 'no') : (t === 'none' ? 'no' : null);
+      return Object.assign({}, r, {
+        done, total, progress: total ? done / total : 0, hwIn: hw.length,
+        passed: hw.filter((x) => x.rec.status === 'passed').length,
+        waiting: hw.filter((x) => x.rec.status === 'processing').length,
+        redo: hw.filter((x) => x.rec.status === 'failed').length,
+        files: nFiles, last, login, enrolledAt: S.enroll.get(r.contactId) || null,
+      });
+    });
+    const nameCount = new Map();
+    for (const m of byMember) { const k = m.name.trim().toLowerCase(); nameCount.set(k, (nameCount.get(k) || 0) + 1); }
+    for (const m of byMember) m.dup = nameCount.get(m.name.trim().toLowerCase()) > 1;
+    const memberById = new Map(byMember.map((m) => [m.contactId, m]));
+    const queue = [];
+    for (const [key, v] of latest) {
+      if (v.rec.status !== 'processing') continue;
+      const m = memberById.get(v.rec.contactId);
+      if (!m) continue;
+      queue.push({ key, rec: v.rec, att: v.att, member: m, lesson: lessonById.get(v.rec.lessonId) || { title: 'Lesson', short: 'Lesson', order: 9999 }, turnedIn: timeOf(v.rec.contactId, v.rec.lessonId), files: files.get(key) || [] });
+    }
+    queue.sort((a, b) => (a.turnedIn ? 0 : 1) - (b.turnedIn ? 0 : 1) || String(a.turnedIn || '').localeCompare(String(b.turnedIn || '')) || a.lesson.order - b.lesson.order);
+    const lessonStats = assignments.map((l) => {
+      let passed = 0, waiting = 0, redo = 0, done = 0;
+      for (const m of members) {
+        const x = latest.get(m.contactId + '|' + l.id);
+        if (x) { if (x.rec.status === 'passed') passed++; else if (x.rec.status === 'processing') waiting++; else if (x.rec.status === 'failed') redo++; }
+        if (timeOf(m.contactId, l.id)) done++;
+      }
+      return { lesson: l, passed, waiting, redo, none: members.length - passed - waiting - redo, done };
+    });
+    const doneByLesson = S.course.map((l) => members.filter((m) => timeOf(m.contactId, l.id)).length);
+    // Turn-ins per local day, last 7 days (first turn-in time of each homework).
+    const days = [];
+    const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+    for (let i = 6; i >= 0; i--) { const d = new Date(today0); d.setDate(d.getDate() - i); days.push({ start: d.getTime(), n: 0 }); }
+    for (const v of latest.values()) {
+      const t = timeOf(v.rec.contactId, v.rec.lessonId);
+      if (!t) continue;
+      const ms = new Date(t).getTime();
+      for (let i = days.length - 1; i >= 0; i--) if (ms >= days[i].start) { if (i < days.length - 1 || ms < days[i].start + 86400000) days[i].n++; break; }
+    }
+    // Follow-ups, one reason per member, most urgent first.
+    const follow = [];
+    for (const m of byMember) {
+      let r = null;
+      if (m.login === 'no') r = { rank: 0, cls: 'bad', label: 'No course login', note: 'Paid ' + fmtDay(m.wonAt) + ' but has no access to the course' };
+      else if (m.redo) r = { rank: 1, cls: 'bad', label: m.redo + ' redo to resubmit', note: 'Sent back for redo, no new try yet' };
+      else if (m.hwIn === 0) { const d = daysSince(m.wonAt); r = { rank: 2, cls: 'warn', label: 'No homework yet', note: d != null ? 'Paid ' + d + (d === 1 ? ' day' : ' days') + ' ago' : 'No submissions in the course' }; }
+      else { const d = daysSince(m.last); if (d != null && d >= CFG.quietDays) r = { rank: 3, cls: 'none', label: 'Quiet for ' + d + ' days', note: 'Last activity ' + fmtWhen(m.last) }; }
+      if (r) follow.push(Object.assign({ member: m }, r));
+    }
+    follow.sort((a, b) => a.rank - b.rank || a.member.name.localeCompare(b.member.name));
+    // Activity: lessons finished and graded homework. Waiting homework collapses to one row per lesson (it is already in the queue).
+    const events = [], waitingByLesson = new Map();
+    for (const m of byMember) {
+      const t = S.times.get(m.contactId);
+      if (!t || t === 'none') continue;
+      for (const [lid, at] of t) {
+        if (!at) continue;
+        const l = lessonById.get(lid);
+        if (!l) continue;
+        const key = m.contactId + '|' + lid;
+        const x = latest.get(key);
+        if (l.isAssignment && x && x.rec.status === 'processing') {
+          const w = waitingByLesson.get(lid) || { kind: 'waiting', lesson: l, at, n: 0, first: null };
+          w.n++; if (!w.first || at < w.first.at) w.first = { at, id: x.rec.id }; if (at > w.at) w.at = at;
+          waitingByLesson.set(lid, w);
+          continue;
+        }
+        events.push({ kind: l.isAssignment && x ? 'graded' : 'lesson', at, member: m, lesson: l, key, rec: x ? x.rec : null, files: (files.get(key) || []).length });
+      }
+    }
+    for (const w of waitingByLesson.values()) events.push(w);
+    events.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    // Uploads: one row per submission (try), files stacked.
+    const uploads = [], fileList = [];
+    for (const a of S.assess) {
+      const m = memberById.get(a.contactId);
+      if (!m) continue;
+      const fl = (a.submission || []).filter((f) => f && f.url).map((f) => ({ url: f.url, title: f.title || 'File', attempt: Number(a.attempt) || 1 }));
+      if (!fl.length) continue;
+      const l = lessonById.get(a.lessonId) || { title: 'Lesson', short: 'Lesson', order: 9999 };
+      const key = a.contactId + '|' + a.lessonId;
+      const lat = latest.get(key);
+      uploads.push({ key: a.id, gradeKey: key, member: m, lesson: l, status: a.status, attempt: Number(a.attempt) || 1, files: fl, rec: a, isLatest: !!(lat && lat.rec.id === a.id), turnedIn: timeOf(a.contactId, a.lessonId) });
+      for (const f of fl) fileList.push({ title: f.title, url: f.url, member: m, lesson: l });
+    }
+    return { members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
+  }
+
+  // ---------- grader ----------
+  function grader(rec, ctx) {
+    const id = rec.id;
+    if (S.mode === 'snapshot') {
+      return h('div', { class: 'grader' },
+        h('div', { class: 'gtop' }, h('h3', null, 'Grade this homework'), h('span', { class: 'current' }, 'Status now ', pill(rec.status))),
+        h('p', { class: 'gmsg bad' }, icon('alert'), h('span', null, 'Grading saves straight to GoHighLevel, so it needs GoHighLevel connected in your own claude.ai account (Settings → Connectors). Reload this page after connecting.')),
+        ...(rec.feedback ? [h('p', { class: 'lastfb' }, 'Note on file: ' + rec.feedback)] : []));
+    }
+    // A regrade starts from what GoHighLevel holds now, so an existing note or score isn't wiped by accident.
+    const d = S.drafts[id] || (S.drafts[id] = { status: '', score: Number(rec.score) > 0 ? String(rec.score) : '', feedback: rec.feedback || '' });
+    const who = firstName(ctx.memberName);
+    let busy = false;
+    const tick = () => h('span', { class: 'tick', 'aria-hidden': 'true' }, icon('check'));
+    const bPass = h('button', { type: 'button', class: 'choice pass', id: 'pass-' + id, 'aria-pressed': 'false' }, icon('check'), h('span', null, h('b', null, 'Pass'), h('small', null, 'Marks this homework complete')), tick());
+    const bRedo = h('button', { type: 'button', class: 'choice redo', 'aria-pressed': 'false' }, icon('redo'), h('span', null, h('b', null, 'Send back for redo'), h('small', null, who + ' fixes it and resubmits')), tick());
+    const choices = h('div', { class: 'choices', role: 'group', 'aria-label': 'Grade' }, bPass, bRedo);
+    const score = h('input', { type: 'number', min: '0', max: '100', step: '1', inputmode: 'numeric', id: 'score-' + id, placeholder: '0–100' });
+    score.value = d.score;
+    const fb = h('textarea', { id: 'fb-' + id, rows: '3' });
+    fb.value = d.feedback;
+    const fbLabel = h('span');
+    const fbNote = h('span', { class: 'fnote' });
+    const save = h('button', { type: 'button', class: 'btn primary' });
+    const hint = h('span', { class: 'hint' });
+    const keys = ctx.onSaved ? h('span', { class: 'keys', 'aria-hidden': 'true' }, h('kbd', null, 'P'), 'pass', h('kbd', null, 'R'), 'redo', h('kbd', null, 'Ctrl'), '+', h('kbd', null, 'Enter'), 'save') : null;
+    const msg = h('p', { class: 'gmsg', role: 'status' });
+    const now = h('span', { class: 'current' }, 'Status now ', pill(rec.status));
+    const actions = h('div', { class: 'gactions' }, save, hint, keys);
+    const box = h('div', { class: 'grader' });
+    function sync() {
+      bPass.setAttribute('aria-pressed', String(d.status === 'passed'));
+      bRedo.setAttribute('aria-pressed', String(d.status === 'failed'));
+      choices.classList.toggle('has-pick', !!d.status);
+      box.classList.toggle('is-pass', d.status === 'passed');
+      box.classList.toggle('is-redo', d.status === 'failed');
+      bPass.disabled = bRedo.disabled = score.disabled = fb.disabled = busy;
+      save.disabled = !d.status || busy;
+      save.className = 'btn ' + (d.status === 'passed' ? 'save-pass' : d.status === 'failed' ? 'save-redo' : 'primary');
+      if (busy) save.replaceChildren(h('span', { class: 'spin', 'aria-hidden': 'true' }), 'Saving to GoHighLevel…');
+      else save.replaceChildren(d.status === 'passed' ? icon('check') : d.status === 'failed' ? icon('redo') : '', d.status === 'passed' ? 'Save Pass for ' + who : d.status === 'failed' ? 'Send ' + who + ' back for redo' : 'Save grade');
+      hint.textContent = !d.status ? 'Pick Pass or Redo first.' : 'Saves to GoHighLevel right away.';
+      if (d.status === 'failed') {
+        fbLabel.replaceChildren('What ' + who + ' needs to fix');
+        fb.placeholder = 'Name the one thing to change before they resubmit';
+        fbNote.className = 'fnote' + (d.feedback.trim() ? '' : ' warn');
+        fbNote.textContent = d.feedback.trim() ? who + ' sees this note in the course.' : 'Add a note so ' + who + ' knows what to fix.';
+      } else {
+        fbLabel.replaceChildren('Note to ' + who + ' ', h('span', { class: 'opt' }, '(optional)'));
+        fb.placeholder = d.status === 'passed' ? 'What they did well' : 'What they did well, or the one thing to fix';
+        fbNote.className = 'fnote';
+        fbNote.textContent = who + ' sees this note in the course.';
+      }
+    }
+    const pick = (v, set) => { d.status = set || d.status !== v ? v : ''; msg.className = 'gmsg'; msg.replaceChildren(); sync(); };
+    bPass.addEventListener('click', () => pick('passed'));
+    bRedo.addEventListener('click', () => { pick('failed'); if (d.status === 'failed' && !fb.value.trim()) fb.focus(); });
+    score.addEventListener('input', () => { d.score = score.value; });
+    fb.addEventListener('input', () => { d.feedback = fb.value; if (d.status === 'failed') sync(); });
+    function trySave() {
+      if (!d.status || busy) return;
+      const sc = String(d.score || '').trim();
+      if (sc !== '' && (isNaN(Number(sc)) || Number(sc) < 0 || Number(sc) > 100)) { showErr('Score must be a whole number from 0 to 100, or left blank.'); score.focus(); return; }
+      doSave();
+    }
+    save.addEventListener('click', trySave);
+    box.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); trySave(); return; }
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'TEXTAREA' || tag === 'INPUT' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === 'p' || e.key === 'P') { e.preventDefault(); pick('passed', true); bPass.focus(); }
+      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); pick('failed', true); fb.focus(); }
+    });
+    function showErr(text) { msg.className = 'gmsg bad'; msg.replaceChildren(icon('alert'), h('span', null, text)); }
+    async function doSave() {
+      if (busy) return;
+      busy = true; sync();
+      msg.className = 'gmsg'; msg.replaceChildren();
+      // Always send score and note so GoHighLevel matches exactly what's on screen (an emptied box clears the old note).
+      const sc = String(d.score || '').trim();
+      const body = { status: d.status, score: sc === '' ? 0 : Number(sc), feedback: d.feedback.trim() };
+      const want = d.status;
+      let ok = false, ambiguous = false, failText = '';
+      try {
+        await ghl('review-assessment', { path: { productId: CFG.product, assessmentId: id }, body }, 'Grade ' + ctx.memberName + ' on ' + ctx.lessonShort, { write: true, idempotencyKey: 'grade-' + id + '-' + Date.now() });
+        ok = true;
+      } catch (e) {
+        if (['server_unavailable', 'upstream_error', 'cancelled'].includes(e && e.code) || !(e && e.code)) ambiguous = true;
+        failText = errorText(e);
+      }
+      let fresh = null;
+      try { fresh = await ghl('get-assessment', { path: { productId: CFG.product, assessmentId: id } }, 'Confirm the saved grade'); } catch (_) { /* keep local */ }
+      if (fresh && fresh.id) {
+        S.assess = S.assess.map((a) => (a.id === id ? fresh : a));
+        if (ambiguous && fresh.status === want) ok = true;
+      } else if (ok) {
+        S.assess = S.assess.map((a) => (a.id === id ? Object.assign({}, a, { status: want, score: body.score, feedback: body.feedback }) : a));
+      }
+      busy = false;
+      if (ok) {
+        delete S.drafts[id];
+        setTimeout(saveSnapshot, 1500);
+        const passed = want === 'passed';
+        const at = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        box.classList.remove('is-pass', 'is-redo');
+        box.replaceChildren(h('div', { class: 'gdone ' + (passed ? 'pass' : 'redo'), role: 'status' },
+          h('span', { class: 'badge', 'aria-hidden': 'true' }, icon(passed ? 'check' : 'redo')),
+          h('span', null, h('b', null, passed ? who + ' passed ' + ctx.lessonShort : who + ' was sent back for redo'), h('small', null, 'Saved to GoHighLevel at ' + at + (body.feedback ? '. ' + who + ' can see your note.' : '.') + (ctx.onSaved ? ' Opening the next one…' : '')))));
+        setTimeout(() => {
+          if (ctx.onSaved) ctx.onSaved(want);
+          else { if (S.openGrade === ctx.gradeKey) S.openGrade = null; renderAll(); toast((passed ? 'Passed: ' : 'Sent back for redo: ') + ctx.memberName + '. Saved to GoHighLevel.'); }
+        }, 900);
+        return;
+      }
+      sync();
+      if (ambiguous) showErr('GoHighLevel didn’t confirm the save. Check “Status now” above: if it still says Waiting on review, press Save again.');
+      else showErr('Didn’t save. ' + failText + ' Your grade and note are still here; press Save again.');
+      if (fresh) now.replaceChildren('Status now ', pill(fresh.status));
+    }
+    sync();
+    box.append(
+      h('div', { class: 'gtop' }, h('h3', null, 'Grade this homework'), now),
+      choices,
+      h('div', { class: 'row2' },
+        h('label', { class: 'field', for: 'score-' + id }, h('span', null, 'Score ', h('span', { class: 'opt' }, '(optional)')), score),
+        h('label', { class: 'field', for: 'fb-' + id }, fbLabel, fb, fbNote)),
+      actions,
+      msg,
+      ...(rec.feedback ? [h('p', { class: 'lastfb' }, 'The note box starts with the note already saved in GoHighLevel. Edit or clear it before saving.')] : []));
+    return box;
+  }
+  const graderFocused = () => { const a = document.activeElement; return !!(a && a.closest && a.closest('.grader')); };
+  const hasDrafts = () => Object.values(S.drafts).some((d) => d.status);
+  function fileCards(files, ctx) {
+    if (!files.length) return h('p', { class: 'muted', style: 'margin:0' }, 'No files attached.');
+    return h('ul', { class: 'files' }, files.map((f, idx) => {
+      const seen = S.opened.has(f.url);
+      const inner = [h('span', { class: 'ext' }, extOf(f.title)), h('span', { class: 'fn' }, h('b', { title: f.title }, midTrunc(f.title, 48)), h('small', null, (isPhone() ? 'Tap' : 'Click') + ' to view · ' + extOf(f.title) + ' · try ' + f.attempt)), seen ? h('span', { class: 'seen' }, icon('check'), 'Viewed') : null, icon('eye')];
+      if (!/^https:\/\//.test(f.url)) return h('li', null, h('span', { class: 'file' }, inner));
+      const a = h('button', { type: 'button', class: 'file' + (seen ? ' opened' : ''), 'aria-label': 'View ' + f.title + (seen ? ' (viewed)' : '') }, inner);
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!S.opened.has(f.url)) { a.classList.add('opened'); a.insertBefore(h('span', { class: 'seen' }, icon('check'), 'Viewed'), a.lastChild); }
+        openViewer(files, idx, ctx, a);
+      });
+      return h('li', null, a);
+    }));
+  }
+  function fileLinks(files, ctx) {
+    if (!files.length) return '';
+    return h('div', { class: 'flinks' }, files.map((f, idx) => {
+      if (!/^https:\/\//.test(f.url)) return h('span', null, f.title);
+      const a = h('button', { type: 'button', class: 'linkbtn', title: 'View ' + f.title }, f.title + (f.attempt > 1 ? ' (try ' + f.attempt + ')' : ''));
+      a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewer(files, idx, ctx, a); });
+      return a;
+    }));
+  }
+
+  // ---------- file viewer ----------
+  const LIB = {
+    pdf: ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'],
+    pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+    docx: ['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'https://cdn.jsdelivr.net/npm/docx-preview@0.3.3/dist/docx-preview.min.js'],
+    docxFallback: ['https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js'],
+    sheet: ['https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'],
+    sheetStyles: ['https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'],
+  };
+  const scriptLoads = {};
+  function loadScript(src) {
+    if (!scriptLoads[src]) scriptLoads[src] = new Promise((res, rej) => {
+      const el = document.createElement('script');
+      el.src = src; el.async = true;
+      el.onload = () => res();
+      el.onerror = () => { delete scriptLoads[src]; rej(new Error('viewer library did not load')); };
+      document.head.appendChild(el);
+    });
+    return scriptLoads[src];
+  }
+  const loadScripts = (list) => list.reduce((p, src) => p.then(() => loadScript(src)), Promise.resolve());
+  function kindOf(f) {
+    const m = /\.([a-z0-9]{2,5})(?:\?|#|$)/i.exec(f.url || '') || /\.([a-z0-9]{2,5})$/i.exec(f.title || '');
+    const ext = m ? m[1].toLowerCase() : '';
+    if (ext === 'pdf') return 'pdf';
+    if (ext === 'docx') return 'docx';
+    if (['xlsx', 'xlsm', 'xls', 'csv', 'ods'].includes(ext)) return 'sheet';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return 'image';
+    if (ext === 'txt') return 'text';
+    if (['doc', 'ppt', 'pptx', 'rtf'].includes(ext)) return 'office';
+    return 'other';
+  }
+  const OFFICE = new Set(['docx', 'sheet', 'office']);
+  const officeViewUrl = (url) => 'https://view.officeapps.live.com/op/view.aspx?src=' + encodeURIComponent(url);
+  const tabUrl = (f) => (OFFICE.has(kindOf(f)) && !/\.csv(\?|$)/i.test(f.url) ? officeViewUrl(f.url) : f.url);
+  let V = null;
+  function openViewer(files, idx, ctx, returnFocus) {
+    const dlg = $('#viewer');
+    V = { files: files.filter((f) => /^https:\/\//.test(f.url)), idx: 0, ctx: ctx || {}, ret: returnFocus || null, token: 0 };
+    V.idx = Math.max(0, V.files.findIndex((f) => f.url === files[idx].url));
+    if (!dlg.open) { try { dlg.showModal(); } catch (_) { dlg.setAttribute('open', ''); } }
+    renderViewer();
+  }
+  function closeViewer() {
+    const dlg = $('#viewer');
+    if (dlg.open) { try { dlg.close(); } catch (_) { dlg.removeAttribute('open'); } }
+  }
+  $('#viewer').addEventListener('close', () => { if (V && V.ret && V.ret.isConnected) V.ret.focus(); V = null; $('#viewer').replaceChildren(); });
+  $('#viewer').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeViewer(); });
+  $('#viewer').addEventListener('keydown', (e) => {
+    if (!V || V.files.length < 2) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight' && V.idx < V.files.length - 1) { V.idx++; renderViewer(); }
+    if (e.key === 'ArrowLeft' && V.idx > 0) { V.idx--; renderViewer(); }
+  });
+  function renderViewer() {
+    const dlg = $('#viewer');
+    const f = V.files[V.idx];
+    S.opened.add(f.url);
+    const kind = kindOf(f);
+    const who = [V.ctx.member, V.ctx.lesson].filter(Boolean).join(' · ');
+    const tabs = V.files.length > 1 ? h('div', { class: 'vtabs', role: 'tablist', 'aria-label': 'Files in this submission' }, V.files.map((x, i) => h('button', { type: 'button', class: 'vtab', role: 'tab', 'aria-selected': String(i === V.idx), title: x.title, onclick: () => { V.idx = i; renderViewer(); } }, midTrunc(x.title, 40)))) : null;
+    const body = h('div', { class: 'vbody' });
+    dlg.replaceChildren(
+      h('div', { class: 'vhd' },
+        h('span', { class: 'ext', 'aria-hidden': 'true' }, extOf(f.title)),
+        h('div', { class: 'vt' }, h('b', { id: 'v-title', title: f.title }, f.title), h('small', null, [who, V.files.length > 1 ? 'File ' + (V.idx + 1) + ' of ' + V.files.length : null, 'Try ' + (f.attempt || 1)].filter(Boolean).join(' · '))),
+        h('div', { class: 'vact' },
+          h('a', { class: 'btn small', href: tabUrl(f), target: '_blank', rel: 'noopener', title: 'Open in a new browser tab without downloading' }, icon('open'), h('span', { class: 'lbl' }, 'New tab')),
+          h('a', { class: 'btn small', href: f.url, target: '_blank', rel: 'noopener', download: '' }, icon('dl'), h('span', { class: 'lbl' }, 'Download')),
+          h('button', { type: 'button', class: 'btn small', 'aria-label': 'Close viewer', onclick: closeViewer }, icon('x'), h('span', { class: 'lbl' }, 'Close')))),
+      ...(tabs ? [tabs] : []), body);
+    const token = ++V.token;
+    body.replaceChildren(h('div', { class: 'vstate' }, h('span', { class: 'spin', 'aria-hidden': 'true' }), h('p', null, 'Opening ' + f.title + '…')));
+    previewInto(body, f, kind, () => V && V.token === token).catch((e) => {
+      if (!V || V.token !== token) return;
+      fallback(body, f, kind, e && e.message);
+    });
+  }
+  function fallback(body, f, kind, why) {
+    body.replaceChildren(h('div', { class: 'vstate' },
+      icon('eye'),
+      h('p', null, h('b', null, 'This file can’t be shown inside the dashboard.')),
+      h('p', null, why === 'notsynced' || why === 'nomake' ? 'This file hasn’t been opened in the dashboard yet, and fetching it needs the Make MCP connector in your claude.ai account. Once someone with it (Nick or Toby) opens this file, it opens here for everyone. Until then, open it in a new tab.' : (kind === 'office' ? 'Older Word and PowerPoint files need Microsoft’s viewer.' : (why ? 'The preview didn’t load (' + why + ').' : 'The preview didn’t load.')) + ' Open it in a new tab to read it without downloading.'),
+      h('a', { class: 'btn primary', href: tabUrl(f), target: '_blank', rel: 'noopener' }, icon('open'), 'Open in a new tab')));
+  }
+  async function fetchBytes(url) {
+    let res;
+    try { res = await fetch(url, { mode: 'cors', credentials: 'omit' }); }
+    catch (_) { throw new Error('this page isn’t allowed to fetch the file'); }
+    if (!res.ok) throw new Error('the file host answered ' + res.status);
+    return res.arrayBuffer();
+  }
+  // Copies of homework files kept inside this artifact (claude.ai only lets the page read its own files).
+  const bundles = new Map();
+  function getBundle(id) {
+    if (!bundles.has(id)) bundles.set(id, fetch('/_blob/' + id).then((r) => { if (!r.ok) throw new Error('the saved copy answered ' + r.status); return r.json(); }).catch((e) => { bundles.delete(id); throw e; }));
+    return bundles.get(id);
+  }
+  function b64ToBuf(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out.buffer;
+  }
+  const MAKE = { server: 'Make MCP', tool: 'scenarios_run', scenarioId: 6900293 };
+  function setStatus(body, text) { body.replaceChildren(h('div', { class: 'vstate' }, h('span', { class: 'spin', 'aria-hidden': 'true' }), h('p', null, text))); }
+  async function fetchViaMake(url) {
+    if (!S.mcp) throw new Error('notsynced');
+    let res;
+    try { res = await S.mcp.callTool(MAKE.server, MAKE.tool, { scenarioId: MAKE.scenarioId, responsive: true, data: { url } }, { cache: false }); }
+    catch (e) {
+      if (e && ['server_not_connected', 'server_not_found', 'not_in_manifest', 'consent_required', 'needs_reauth', 'blocked_by_policy', 'not_granted'].includes(e.code)) throw new Error('nomake');
+      throw new Error('the file fetch didn’t finish (' + ((e && e.code) || 'error') + ')');
+    }
+    let p = res && res.payload !== undefined ? res.payload : res;
+    if (typeof p === 'string') { try { p = JSON.parse(p); } catch (_) { /* keep */ } }
+    const out = p && (p.result ? p.result.outputs : p.outputs);
+    const b64 = out && out.b64;
+    if (!b64) throw new Error('the file fetch came back empty');
+    return b64ToBuf(String(b64).replace(/\s+/g, ''));
+  }
+  async function sha16(text) {
+    const d = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(text));
+    return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  }
+  function bufToB64(buf) {
+    const u = new Uint8Array(buf); let s = '';
+    for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  // Editors keep a copy so later opens are instant and work for graders without the Make connector.
+  async function saveCopy(f, kind, buf) {
+    if (!window.claude || !window.claude.use) return;
+    const [assets, db] = await Promise.all([window.claude.use('assets'), window.claude.use('db')]);
+    if (!assets || !db) return;
+    const id = await sha16(f.url);
+    const ext = ((/\.([a-z0-9]{2,5})(?:\?|$)/i.exec(f.url) || [])[1] || '').toLowerCase();
+    let up, doc;
+    if (kind === 'pdf') { up = await assets.upload(new Blob([buf], { type: 'application/pdf' })); doc = { url: f.url, kind: 'pdf', asset: up.id }; }
+    else if (kind === 'image') { up = await assets.upload(new Blob([buf], { type: ext === 'png' ? 'image/png' : 'image/jpeg' })); doc = { url: f.url, kind: 'image', asset: up.id }; }
+    else {
+      const body = JSON.stringify({ [id]: { ext: kind === 'docx' ? 'docx' : ext, b64: bufToB64(buf) } });
+      up = await assets.upload(new Blob([body], { type: 'application/json' }));
+      doc = { url: f.url, kind: 'bundle', asset: up.id, key: id };
+    }
+    await db.collection('viewfiles').doc(id).set(doc);
+    S.mirror.set(f.url, doc);
+  }
+  async function loadMirror() {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    try {
+      const db = await window.claude.use('db');
+      if (!db) return;
+      const snap = await db.collection('viewfiles').limit(1000).get();
+      for (const d of snap.docs) { const v = d.data(); if (v && v.url && v.asset) S.mirror.set(v.url, v); }
+    } catch (_) { /* viewer keeps its fallback */ }
+  }
+  async function previewInto(body, f, kind, alive) {
+    const m = S.mirror.get(f.url);
+    let pre = null;
+    if (m) {
+      if (m.kind === 'image') { kind = 'image'; }
+      else if (m.kind === 'pdf') { kind = 'pdf'; pre = fetchBytes('/_blob/' + m.asset); }
+      else if (m.kind === 'bundle') {
+        const e = (await getBundle(m.asset))[m.key];
+        if (!e) throw new Error('the saved copy is missing');
+        kind = e.ext === 'docx' ? 'docx' : 'sheet';
+        pre = Promise.resolve(b64ToBuf(e.b64));
+      }
+    } else if (kind !== 'office' && kind !== 'other') {
+      // No saved copy yet: fetch it now through the Make scenario, then keep a copy for everyone else.
+      setStatus(body, 'Getting ' + f.title + ' from GoHighLevel… (first open takes a few seconds)');
+      const got = await fetchViaMake(f.url);
+      if (!alive()) return;
+      saveCopy(f, kind, got).catch(() => { /* viewing still works without the saved copy */ });
+      if (kind === 'image') { kind = 'image-buf'; pre = Promise.resolve(got); }
+      else pre = Promise.resolve(got);
+    }
+    if (kind === 'image-buf') {
+      const url = URL.createObjectURL(new Blob([await pre], { type: /\.png$/i.test(f.url) ? 'image/png' : 'image/jpeg' }));
+      const img = h('img', { class: 'vimg', alt: f.title, src: url });
+      await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('the image didn’t load')); });
+      if (alive()) body.replaceChildren(img);
+      return;
+    }
+    if (kind === 'office' || kind === 'other') throw new Error(kind === 'office' ? '' : 'unsupported file type');
+    if (kind === 'image') {
+      const img = h('img', { class: 'vimg', alt: f.title, src: m ? '/_blob/' + m.asset : f.url });
+      await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('the image didn’t load')); });
+      if (alive()) body.replaceChildren(img);
+      return;
+    }
+    const isCsv = /\.csv(\?|$)/i.test(f.url) || /\.csv$/i.test(f.title);
+    const isXlsx = /\.(xlsx|xlsm)(\?|$)/i.test(f.url);
+    const libs = kind === 'pdf' ? LIB.pdf : kind === 'docx' ? LIB.docx : kind === 'sheet' ? LIB.sheet.concat(isXlsx ? LIB.sheetStyles : []) : [];
+    const [buf] = await Promise.all([pre || fetchBytes(f.url), libs.length ? loadScripts(libs) : null]);
+    if (!alive()) return;
+    if (kind === 'text') { body.replaceChildren(h('pre', { class: 'docpage', style: 'white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:13px' }, new TextDecoder().decode(buf))); return; }
+    if (kind === 'docx') {
+      try {
+        const host = h('div', { class: 'docxhost' });
+        const styleHost = h('div');
+        await window.docx.renderAsync(buf, host, styleHost, { className: 'dx', inWrapper: true, ignoreWidth: false, ignoreHeight: false, ignoreFonts: false, breakPages: true, renderHeaders: true, renderFooters: true, renderFootnotes: true, renderEndnotes: true, useBase64URL: true, experimental: true });
+        if (!alive()) return;
+        for (const a of host.querySelectorAll('a[href]')) { a.target = '_blank'; a.rel = 'noopener'; }
+        for (const el of host.querySelectorAll('script,iframe,object,embed,form')) el.remove();
+        fontFallbacks(styleHost, host);
+        body.replaceChildren(styleHost, host);
+        fitDocx(body, host);
+        return;
+      } catch (e) {
+        if (!alive()) return;
+        await loadScripts(LIB.docxFallback);
+        const out = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+        if (!alive()) return;
+        const page = h('div', { class: 'docpage' });
+        page.innerHTML = window.DOMPurify.sanitize(out.value, { FORBID_TAGS: ['style', 'form', 'input', 'button'], FORBID_ATTR: ['style'] });
+        for (const a of page.querySelectorAll('a[href]')) { a.target = '_blank'; a.rel = 'noopener'; }
+        body.replaceChildren(page, h('div', { class: 'vnote' }, 'Simplified view: this document’s layout couldn’t be reproduced exactly. Open in a new tab for the original formatting.'));
+        return;
+      }
+    }
+    if (kind === 'pdf') {
+      const lib = window.pdfjsLib;
+      lib.GlobalWorkerOptions.workerSrc = LIB.pdfWorker;
+      const pdf = await lib.getDocument({ data: new Uint8Array(buf) }).promise;
+      if (!alive()) return;
+      const wrap = h('div', { class: 'pdfpages' });
+      body.replaceChildren(wrap);
+      const max = Math.min(pdf.numPages, 40);
+      const width = Math.min(900, body.clientWidth - 40);
+      for (let n = 1; n <= max; n++) {
+        if (!alive()) return;
+        const pg = await pdf.getPage(n);
+        const base = pg.getViewport({ scale: 1 });
+        const scale = (width / base.width) * (window.devicePixelRatio || 1);
+        const vp = pg.getViewport({ scale });
+        const c = h('canvas', { 'aria-label': 'Page ' + n + ' of ' + pdf.numPages });
+        c.width = vp.width; c.height = vp.height; c.style.width = width + 'px';
+        wrap.append(c);
+        await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      }
+      if (pdf.numPages > max) body.append(h('div', { class: 'vnote' }, 'Showing the first ' + max + ' of ' + pdf.numPages + ' pages. Open in a new tab to see the rest.'));
+      return;
+    }
+    // sheet
+    const X = window.XLSX;
+    const wb = isCsv ? X.read(new TextDecoder().decode(buf), { type: 'string' }) : X.read(new Uint8Array(buf), { type: 'array', cellDates: true, cellNF: true });
+    let ej = null;
+    if (isXlsx && window.ExcelJS) { try { ej = new window.ExcelJS.Workbook(); await ej.xlsx.load(buf); } catch (_) { ej = null; } }
+    if (!alive()) return;
+    let si = 0;
+    const holder = h('div', { style: 'display:flex;flex-direction:column;height:100%' });
+    const draw = () => {
+      const name = wb.SheetNames[si];
+      holder.replaceChildren(...renderSheet(wb.Sheets[name], ej ? ej.getWorksheet(name) : null),
+        ...(wb.SheetNames.length > 1 ? [h('div', { class: 'stabs', role: 'tablist', 'aria-label': 'Sheets' }, wb.SheetNames.map((n, i) => h('button', { type: 'button', class: 'stab', role: 'tab', 'aria-selected': String(i === si), onclick: () => { si = i; draw(); } }, n)))] : []));
+    };
+    draw();
+    body.replaceChildren(holder);
+  }
+
+  // Excel theme colors (Office default) for fills/fonts that reference the theme.
+  const THEME = ['FFFFFF', '000000', 'E7E6E6', '44546A', '4472C4', 'ED7D31', 'A5A5A5', 'FFC000', '5B9BD5', '70AD47'];
+  function xlColor(c) {
+    if (!c) return null;
+    let hex = null;
+    if (c.argb && /^[0-9A-F]{8}$/i.test(c.argb)) hex = c.argb.slice(2);
+    else if (c.argb && /^[0-9A-F]{6}$/i.test(c.argb)) hex = c.argb;
+    else if (typeof c.theme === 'number' && THEME[c.theme]) hex = THEME[c.theme];
+    if (!hex) return null;
+    let [r, g, b] = [0, 2, 4].map((k) => parseInt(hex.slice(k, k + 2), 16));
+    const t = Number(c.tint) || 0;
+    if (t) { const f = (v) => Math.round(t < 0 ? v * (1 + t) : v + (255 - v) * t); r = f(r); g = f(g); b = f(b); }
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+  function renderSheet(ws, ews) {
+    const X = window.XLSX;
+    const ref = ws && ws['!ref'] ? X.utils.decode_range(ws['!ref']) : null;
+    if (!ref) return [h('div', { class: 'vstate' }, h('p', null, 'This sheet is empty.'))];
+    // Trim trailing empty rows/columns.
+    let lastR = ref.s.r, lastC = ref.s.c;
+    for (const addr of Object.keys(ws)) {
+      if (addr[0] === '!') continue;
+      const cell = ws[addr];
+      if (cell == null || cell.v == null || cell.v === '') continue;
+      const d = X.utils.decode_cell(addr);
+      if (d.r > lastR) lastR = d.r;
+      if (d.c > lastC) lastC = d.c;
+    }
+    const MAXR = 1500, MAXC = 50;
+    const nr = Math.min(lastR - ref.s.r + 1, MAXR), nc = Math.min(lastC - ref.s.c + 1, MAXC);
+    const r0 = ref.s.r, c0 = ref.s.c;
+    // Merges.
+    const span = new Map(), covered = new Set();
+    for (const m of ws['!merges'] || []) {
+      span.set(m.s.r + ':' + m.s.c, { rs: m.e.r - m.s.r + 1, cs: m.e.c - m.s.c + 1 });
+      for (let r = m.s.r; r <= m.e.r; r++) for (let c = m.s.c; c <= m.e.c; c++) if (r !== m.s.r || c !== m.s.c) covered.add(r + ':' + c);
+    }
+    const cols = ws['!cols'] || [];
+    const colW = (c) => {
+      let w = null;
+      if (ews) { const col = ews.getColumn(c + 1); if (col && col.hidden) return 0; if (col && col.width) w = col.width; }
+      if (w == null && cols[c]) { if (cols[c].hidden) return 0; w = cols[c].wch || (cols[c].wpx ? cols[c].wpx / 7 : null); }
+      return Math.round(((w || 8.43) * 7) + 10);
+    };
+    const colgroup = h('colgroup', null, h('col', { style: 'width:44px' }));
+    const headRow = h('tr', null, h('th', { class: 'rn' }));
+    const widths = [];
+    for (let c = c0; c < c0 + nc; c++) {
+      const w = colW(c); widths.push(w);
+      colgroup.append(h('col', { style: 'width:' + (w || 0) + 'px' + (w ? '' : ';visibility:collapse') }));
+      headRow.append(h('th', { scope: 'col', style: w ? null : 'display:none' }, X.utils.encode_col(c)));
+    }
+    const tb = h('tbody');
+    for (let r = r0; r < r0 + nr; r++) {
+      const erow = ews ? ews.getRow(r + 1) : null;
+      if (erow && erow.hidden) continue;
+      const tr = h('tr', null, h('th', { class: 'rn', scope: 'row' }, String(r + 1)));
+      if (erow && erow.height) tr.style.height = Math.round(erow.height * 1.333) + 'px';
+      for (let c = c0; c < c0 + nc; c++) {
+        const key = r + ':' + c;
+        if (covered.has(key)) continue;
+        const addr = X.utils.encode_cell({ r, c });
+        const cell = ws[addr];
+        const td = h('td');
+        if (!widths[c - c0]) td.style.display = 'none';
+        const sp = span.get(key);
+        if (sp) { if (sp.rs > 1) td.rowSpan = sp.rs; if (sp.cs > 1) td.colSpan = sp.cs; }
+        let text = '';
+        if (cell) {
+          if (cell.w != null) text = cell.w;
+          else if (cell.v instanceof Date) text = cell.v.toLocaleDateString('en-US');
+          else if (cell.v != null) text = String(cell.v);
+          if (cell.t === 'n') td.className = 'num';
+          if (cell.t === 'e') text = cell.w || '#ERROR';
+        }
+        td.textContent = text;
+        if (text.length > 30) td.title = text;
+        // Excel lets non-wrapped text run into empty cells to the right; mirror that with a colspan.
+        if (!sp && text && !(cell && cell.t === 'n')) {
+          const wrap = ews ? !!(ews.getCell(r + 1, c + 1).alignment || {}).wrapText : false;
+          if (!wrap) {
+            let need = text.length * 7.2 + 18, have = widths[c - c0] || 0, extra = 0;
+            while (have < need && c + extra + 1 < c0 + nc) {
+              const nkey = r + ':' + (c + extra + 1);
+              const naddr = X.utils.encode_cell({ r, c: c + extra + 1 });
+              const ncell = ws[naddr];
+              if (covered.has(nkey) || span.has(nkey) || (ncell && ncell.v != null && ncell.v !== '')) break;
+              if (ews) { const nf = ews.getCell(r + 1, c + extra + 2).fill; if (nf && nf.type === 'pattern' && nf.pattern && nf.pattern !== 'none') break; }
+              extra++; have += widths[c - c0 + extra] || 0;
+            }
+            if (extra) { td.colSpan = extra + 1; for (let k = 1; k <= extra; k++) covered.add(r + ':' + (c + k)); }
+          }
+        }
+        if (ews) {
+          const ec = ews.getCell(r + 1, c + 1);
+          const st = td.style;
+          const fill = ec.fill;
+          if (fill && fill.type === 'pattern' && fill.pattern && fill.pattern !== 'none') { const bg = xlColor(fill.fgColor) || xlColor(fill.bgColor); if (bg) st.background = bg; }
+          const fo = ec.font || {};
+          if (fo.bold) st.fontWeight = '700';
+          if (fo.italic) st.fontStyle = 'italic';
+          if (fo.underline) st.textDecoration = 'underline';
+          if (fo.strike) st.textDecoration = 'line-through';
+          const fc = xlColor(fo.color); if (fc) st.color = fc;
+          if (fo.size) st.fontSize = Math.max(9, Math.min(28, Math.round(fo.size * 1.3))) + 'px';
+          const al = ec.alignment || {};
+          if (al.horizontal && ['left', 'center', 'right', 'justify'].includes(al.horizontal)) st.textAlign = al.horizontal;
+          else if (al.horizontal === 'centerContinuous') st.textAlign = 'center';
+          if (al.vertical) st.verticalAlign = al.vertical === 'middle' ? 'middle' : al.vertical === 'top' ? 'top' : 'bottom';
+          if (al.wrapText) { st.whiteSpace = 'pre-wrap'; st.overflow = 'visible'; st.textOverflow = 'clip'; }
+          if (al.indent) st.paddingLeft = (9 + al.indent * 10) + 'px';
+          const bd = ec.border || {};
+          for (const side of ['top', 'right', 'bottom', 'left']) {
+            const b = bd[side];
+            if (b && b.style) { const col = xlColor(b.color) || 'rgb(0,0,0)'; st['border' + side[0].toUpperCase() + side.slice(1)] = (/medium|thick|double/.test(b.style) ? '2px' : '1px') + ' solid ' + col; }
+          }
+        }
+        tr.append(td);
+      }
+      tb.append(tr);
+    }
+    const table = h('table', { class: 'sheet xl' }, colgroup, h('thead', null, headRow), tb);
+    const kids = [h('div', { class: 'sheetwrap', style: 'flex:1;min-height:0' }, table)];
+    if (lastR - r0 + 1 > MAXR || lastC - c0 + 1 > MAXC) kids.push(h('div', { class: 'vnote' }, 'Showing the first ' + nr + ' rows and ' + nc + ' columns. Open in a new tab to see everything.'));
+    return kids;
+  }
+  // Word fonts the viewer's computer may not have (Calibri, Aptos) would otherwise fall back to a serif default.
+  const SERIF = /georgia|times|cambria|garamond|book antiqua|palatino|serif/i;
+  function withGeneric(list) {
+    if (/\b(sans-serif|serif|monospace)\b/i.test(list)) return list;
+    const first = list.split(',')[0];
+    if (/consolas|courier|mono/i.test(first)) return list + ', ui-monospace, monospace';
+    return list + (SERIF.test(first) ? ', Georgia, \'Times New Roman\', serif' : ', Carlito, Calibri, Arial, \'Helvetica Neue\', sans-serif');
+  }
+  function fontFallbacks(styleHost, host) {
+    for (const st of styleHost.querySelectorAll('style')) st.textContent = st.textContent.replace(/font-family:\s*([^;}]+)/gi, (m, v) => 'font-family: ' + withGeneric(v.trim()));
+    for (const el of host.querySelectorAll('[style*="font-family"]')) el.style.fontFamily = withGeneric(el.style.fontFamily);
+    host.style.fontFamily = 'Carlito, Calibri, Arial, sans-serif';
+  }
+  function fitDocx(body, host) {
+    const wrap = host.querySelector('.dx-wrapper') || host;
+    const pages = wrap.querySelectorAll('section.dx');
+    let maxW = 0;
+    for (const pg of pages) maxW = Math.max(maxW, pg.offsetWidth);
+    const avail = body.clientWidth - 32;
+    if (maxW && avail < maxW) { wrap.style.zoom = String(Math.max(0.4, avail / maxW)); }
+  }
+
+  // ---------- render ----------
+  let D = null;
+  function renderAll() {
+    D = derive();
+    renderShell();
+    renderHome();
+    renderMembers();
+    renderLessons();
+    renderUploads();
+  }
+  function renderShell() {
+    const counts = new Map();
+    for (const r of S.roster) counts.set(r.cohort, (counts.get(r.cohort) || 0) + 1);
+    const list = [...counts.keys()].sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
+    if (!list.includes(S.cohort) && S.cohort !== 'all') list.push(S.cohort);
+    const box = $('#cohorts');
+    const opts = list.map((c) => ({ v: c, label: 'Cohort ' + c.slice(1), n: counts.get(c) || 0 })).concat([{ v: 'all', label: 'All cohorts', n: S.roster.length }]);
+    box.replaceChildren(...opts.map((o) => h('button', { type: 'button', class: 'coh', role: 'radio', 'aria-checked': String(S.cohort === o.v), tabindex: S.cohort === o.v ? '0' : '-1', onclick: () => setCohort(o.v) }, h('span', { class: 'radio', 'aria-hidden': 'true' }), o.label, h('span', { class: 'cn' }, S.roster.length ? fmtInt(o.n) : ''))));
+    const ng = $('#n-grade');
+    ng.textContent = fmtInt(D.queue.length);
+    ng.classList.toggle('hot', D.queue.length > 0);
+    $('#n-members').textContent = fmtInt(D.members.length);
+    $('#n-lessons').textContent = fmtInt(S.course.length);
+    const sel = $('#coh-select');
+    sel.replaceChildren(...opts.map((o) => { const op = h('option', { value: o.v }, o.label + (S.roster.length ? ' (' + o.n + ')' : '')); if (o.v === S.cohort) op.selected = true; return op; }));
+    $('#n-uploads').textContent = fmtInt(D.uploads.length);
+  }
+
+  function renderHome() {
+    const hr = new Date().getHours();
+    $('#hello').textContent = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+    const sum = $('#summary');
+    const ready = S.loadedAt || S.roster.length;
+    if (!ready) sum.textContent = S.mcp ? 'Loading ' + cohortName() + ' from GoHighLevel…' : 'Live data loads when this page is opened in claude.ai with the Gohighlevel connector added.';
+    else {
+      const q = D.queue, oldest = q.find((x) => x.turnedIn);
+      sum.replaceChildren(
+        q.length ? h('b', null, fmtInt(q.length) + (q.length === 1 ? ' submission is' : ' submissions are') + ' waiting on review') : h('b', null, 'Nothing is waiting on review'),
+        ' in ' + cohortName() + (oldest ? ', the oldest for ' + ago(oldest.turnedIn) + '. ' : '. '),
+        D.follow.length ? h('b', null, fmtInt(D.follow.length) + (D.follow.length === 1 ? ' member needs' : ' members need') + ' a follow-up.') : 'Every member is on track.');
+    }
+    $('#start').disabled = !D.queue.length;
+    renderKpis(ready);
+    renderInbox();
+    renderFollow();
+    renderActivity();
+  }
+  function setVal(id, v) { $('#' + id).replaceChildren(v == null ? h('span', { class: 'skel' }) : v); }
+  function bars(el, values, opts) {
+    const max = Math.max(1, ...values);
+    el.replaceChildren(...values.map((v, i) => {
+      const b = h('i', { class: (v ? 'on' : '') + (opts && opts.lastToday && i === values.length - 1 && v ? ' today' : '') });
+      b.style.height = Math.max(8, Math.round((v / max) * 100)) + '%';
+      return b;
+    }));
+  }
+  function renderKpis(ready) {
+    if (!ready) return;
+    const ms = D.members;
+    const sum = (f) => ms.reduce((t, m) => t + f(m), 0);
+    // 1. waiting
+    setVal('k1', fmtInt(D.queue.length));
+    const oldest = D.queue.find((x) => x.turnedIn);
+    const todayN = D.days[D.days.length - 1].n;
+    $('#k1-sub').replaceChildren(oldest ? 'Oldest ' + ago(oldest.turnedIn) + ' · ' : '', todayN ? h('span', { class: 'up' }, '+' + todayN + ' today') : '0 today');
+    bars($('#k1-bars'), D.days.map((d) => d.n), { lastToday: true });
+    [...$('#k1-bars').children].forEach((b, i) => { b.title = new Date(D.days[i].start).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ': ' + D.days[i].n + ' turned in'; });
+    $('#k1-bars').setAttribute('aria-label', 'Homework turned in per day, last 7 days: ' + D.days.map((d) => d.n).join(', '));
+    // 2. graded
+    const passed = sum((m) => m.passed), redo = sum((m) => m.redo), waiting = D.queue.length;
+    setVal('k2', fmtInt(passed + redo));
+    const turned = passed + redo + waiting;
+    $('#k2-sub').textContent = turned ? (passed + redo) + ' of ' + turned + ' graded' + (passed + redo ? ' · ' + passed + ' pass · ' + redo + ' redo' : '') : 'Nothing turned in yet';
+    const tot = Math.max(1, turned);
+    const seg = (n, color) => { const i = h('i'); i.style.width = (n / tot * 100) + '%'; i.style.background = 'var(' + color + ')'; return i; };
+    $('#k2-meter').replaceChildren(seg(passed, '--ok'), seg(redo, '--bad'));
+    $('#k2-meter').setAttribute('aria-label', (passed + redo) + ' of ' + turned + ' graded');
+    // 3. progress
+    const avg = ms.length ? sum((m) => m.progress) / ms.length : 0;
+    setVal('k3', h('span', null, String(Math.round(avg * 100)), h('small', null, '%')));
+    let far = -1;
+    D.doneByLesson.forEach((n, i) => { if (n > 0) far = i; });
+    $('#k3-sub').textContent = 'Of ' + fmtInt(S.course.length || 14) + ' lessons' + (far >= 0 ? ' · furthest ' + S.course[far].short + ' (' + D.doneByLesson[far] + '/' + ms.length + ')' : '');
+    // 4. follow-up
+    setVal('k4', fmtInt(D.follow.length));
+    const noHw = D.follow.filter((f) => f.label === 'No homework yet').length, noLogin = D.follow.filter((f) => f.label === 'No course login').length;
+    $('#k4-sub').replaceChildren(noHw || noLogin ? h('span', { class: 'hot' }, [noHw ? noHw + ' no homework' : null, noLogin ? noLogin + ' no login' : null].filter(Boolean).join(' · ')) : 'Of ' + fmtInt(ms.length) + ' paid members');
+  }
+
+  function renderInbox() {
+    const box = $('#inbox');
+    $('#inbox-n').textContent = fmtInt(D.queue.length);
+    const err = S.err.assess || S.err.won;
+    if (err && !S.assess.length) { box.replaceChildren(h('div', { class: 'sect-err' }, err)); return; }
+    if (!S.loadedAt && !S.assess.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading submissions…' : 'Submissions load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (!D.queue.length) { S.sel = null; S.sheet = false; syncSheet(); box.replaceChildren(h('div', { class: 'empty' }, 'Nothing waiting on review in ' + cohortName() + '. New homework shows up here as members turn it in.')); return; }
+    if (!S.selUser || !D.queue.some((q) => q.rec.id === S.sel)) { S.sel = D.queue[0].rec.id; S.selUser = false; }
+    const idx = D.queue.findIndex((q) => q.rec.id === S.sel);
+    const cur = D.queue[idx];
+    // Keep the open grader intact while someone is typing in it.
+    const existing = box.querySelector('.qdetail');
+    const keepDetail = existing && existing.dataset.id === S.sel && graderFocused();
+    const list = h('div', { class: 'qlist', role: 'listbox', 'aria-label': 'Submissions waiting on review' });
+    D.queue.forEach((q, i) => {
+      const age = q.turnedIn ? ago(q.turnedIn) : '';
+      const btn = h('button', { type: 'button', class: 'qrow', role: 'option', 'aria-selected': String(q.rec.id === S.sel), id: 'qr-' + q.rec.id, tabindex: q.rec.id === S.sel ? '0' : '-1' },
+        avatar(q.member.name),
+        h('span', { style: 'min-width:0' }, h('b', null, q.member.name), h('small', null, q.lesson.short + (q.att > 1 ? ' · try ' + q.att : '') + (q.member.dup ? ' · ' + (q.member.email || 'no email') : ''))),
+        h('span', { class: 'age' + (q.turnedIn && daysSince(q.turnedIn) >= 2 ? ' old' : ''), title: q.turnedIn ? 'Turned in ' + fmtWhen(q.turnedIn) : 'Turn-in time unknown' }, age));
+      btn.addEventListener('click', () => selectQueue(q.rec.id));
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const n = D.queue[Math.min(D.queue.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+          selectQueue(n.rec.id, true);
+        }
+      });
+      list.append(btn);
+    });
+    const detail = keepDetail ? existing : queueDetail(cur, idx);
+    detail.classList.toggle('sheet', !!S.sheet);
+    box.replaceChildren(h('div', { class: 'inbox-body' }, list, detail));
+    syncSheet();
+  }
+  function queueDetail(q, idx) {
+    const prev = h('button', { type: 'button', class: 'btn small', 'aria-label': 'Previous submission', disabled: idx <= 0 ? true : null, onclick: () => selectQueue(D.queue[idx - 1].rec.id) }, icon('up'));
+    const next = h('button', { type: 'button', class: 'btn small', 'aria-label': 'Next submission', disabled: idx >= D.queue.length - 1 ? true : null, onclick: () => selectQueue(D.queue[idx + 1].rec.id) }, icon('down'));
+    const onSaved = (want) => {
+      const order = D.queue.map((x) => x.rec.id);
+      const at = order.indexOf(q.rec.id);
+      const nextId = order[at + 1] || order[at - 1] || null;
+      S.sel = nextId;
+      S.selUser = !!nextId;
+      renderAll();
+      sheetTop();
+      const nq = D.queue.find((x) => x.rec.id === nextId);
+      toast((want === 'passed' ? 'Passed: ' : 'Sent back for redo: ') + q.member.name + (nq ? '. Next up: ' + nq.member.name + '.' : '. The queue is clear.'));
+      const nb = nq && document.getElementById('pass-' + nq.rec.id);
+      if (nb) nb.focus();
+    };
+    return h('div', { class: 'qdetail', 'data-id': q.rec.id },
+      h('div', { class: 'dhead' },
+        h('button', { type: 'button', class: 'btn small sheet-back', 'aria-label': 'Back to the grading queue', onclick: closeSheet }, icon('left'), 'Queue'),
+        avatar(q.member.name, 'lg'),
+        h('div', { class: 'who' }, h('b', null, q.member.name), h('small', null, [q.member.email, S.cohort === 'all' ? 'Cohort ' + q.member.cohort.slice(1) : null].filter(Boolean).join(' · '))),
+        h('div', { class: 'nav-btns' }, h('span', { class: 'muted', style: 'align-self:center;font-size:12.5px' }, (idx + 1) + ' of ' + D.queue.length), prev, next)),
+      h('div', null,
+        h('p', { class: 'lesson-line' }, q.lesson.short),
+        q.lesson.short !== q.lesson.title ? h('p', { class: 'lesson-full' }, q.lesson.title) : null,
+        h('div', { class: 'meta' },
+          h('span', null, icon('clock'), q.turnedIn ? 'Turned in ' + fmtWhen(q.turnedIn) : 'Turn-in time unknown'),
+          h('span', null, icon('redo'), 'Try ' + q.att),
+          h('span', null, icon('clip'), q.files.length + (q.files.length === 1 ? ' file' : ' files')))),
+      fileCards(q.files, { member: q.member.name, lesson: q.lesson.short }),
+      grader(q.rec, { memberName: q.member.name, lessonShort: q.lesson.short, gradeKey: q.key, onSaved }));
+  }
+  function selectQueue(id, focusRow) {
+    S.sel = id;
+    S.selUser = true;
+    if (isPhone()) S.sheet = true;
+    renderInbox();
+    if (S.sheet && isPhone()) { sheetTop(); return; }
+    const row = document.getElementById('qr-' + id);
+    if (row) { row.scrollIntoView({ block: 'nearest' }); if (focusRow) row.focus(); }
+  }
+
+  function renderFollow() {
+    const box = $('#follow');
+    if (!S.roster.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading members…' : 'Members load when this page is opened in claude.ai.')); return; }
+    if (!D.follow.length) { box.replaceChildren(h('div', { class: 'empty' }, 'Nobody needs a nudge right now.')); return; }
+    const shown = D.follow.slice(0, 6);
+    box.replaceChildren(
+      h('div', { class: 'flist' }, shown.map((f) => h('button', { type: 'button', class: 'fitem', onclick: () => openMember(f.member.contactId) },
+        avatar(f.member.name),
+        h('span', { style: 'min-width:0' }, h('b', null, f.member.name), h('small', null, f.member.email || 'No email on file'), h('small', null, f.note),
+          f.member.dup ? h('small', { class: 'dupnote' }, 'Same name as another member. Check for a duplicate contact.') : null,
+          h('span', { class: 'pill ' + f.cls }, f.label))))),
+      ...(D.follow.length > shown.length ? [h('div', { class: 'fmore' }, h('a', { href: '#members' }, 'See all ' + D.follow.length + ' in Members'))] : []));
+  }
+
+  function renderActivity() {
+    const box = $('#activity');
+    if (!D.events.length) { box.replaceChildren(h('div', { class: 'empty' }, S.loadedAt ? 'No lessons finished yet in ' + cohortName() + '.' : (S.mcp ? 'Loading activity…' : 'Activity loads when this page is opened in claude.ai.'))); return; }
+    box.replaceChildren(h('ul', { class: 'alist' }, D.events.slice(0, 8).map((ev) => {
+      let btn;
+      if (ev.kind === 'waiting') {
+        btn = h('button', { type: 'button', class: 'aitem', onclick: () => { selectQueue(ev.first.id); $('#inbox-card').scrollIntoView({ block: 'start', behavior: 'smooth' }); } },
+          h('span', { class: 'av', 'aria-hidden': 'true' }, String(ev.n)),
+          h('span', { class: 'what' }, h('b', null, ev.n + (ev.n === 1 ? ' member' : ' members')), h('span', null, ' turned in '), h('b', null, ev.lesson.short), h('span', { class: 'sub' }, pill('processing'))),
+          h('span', { class: 'when', title: fmtWhen(ev.at) }, ago(ev.at) + ' ago'));
+      } else {
+        const hw = ev.kind === 'graded';
+        btn = h('button', { type: 'button', class: 'aitem', onclick: () => openMember(ev.member.contactId, hw ? ev.key : null) },
+          avatar(ev.member.name),
+          h('span', { class: 'what' }, h('b', null, ev.member.name), h('span', null, hw ? ' turned in ' : ' finished '), h('b', null, ev.lesson.short),
+            h('span', { class: 'sub' }, hw ? pill(ev.rec.status) : ev.lesson.module)),
+          h('span', { class: 'when', title: fmtWhen(ev.at) }, ago(ev.at) + ' ago'));
+      }
+      return h('li', null, btn);
+    })));
+  }
+
+  // ---------- tables ----------
+  function sortRows(rows, st, getters) {
+    const g = getters[st.key] || ((r) => r[st.key]);
+    const dir = st.dir === 'asc' ? 1 : -1;
+    return rows.slice().sort((a, b) => {
+      const x = g(a), y = g(b);
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      if (typeof x === 'number' && typeof y === 'number') return (x - y) * dir;
+      return String(x).localeCompare(String(y)) * dir;
+    });
+  }
+  function headCell(table, key, label, cls) {
+    const st = S.sort[table];
+    return h('th', { class: cls || null, scope: 'col', 'aria-sort': st.key === key ? (st.dir === 'asc' ? 'ascending' : 'descending') : null },
+      h('button', { type: 'button', onclick: () => {
+        if (st.key === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.key = key; st.dir = (key === 'name' || key === 'lesson') ? 'asc' : 'desc'; }
+        if (table === 'members') renderMembers(); else renderUploads();
+      } }, label));
+  }
+
+  function renderMembers() {
+    const box = $('#members-list');
+    if (S.err.won && !S.roster.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.won)); return; }
+    if (!S.roster.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading members…' : 'Members load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (graderFocused() && box.contains(document.activeElement)) return;
+    const q = S.mSearch.trim().toLowerCase();
+    let rows = D.members.filter((m) => !q || (m.name + ' ' + m.email).toLowerCase().includes(q));
+    rows = sortRows(rows, S.sort.members, { name: (m) => m.name.toLowerCase(), cohort: (m) => Number(m.cohort.slice(1)) * 1000 + m.progress * 100, progress: (m) => m.progress, last: (m) => m.last });
+    const allMode = S.cohort === 'all';
+    if (!rows.length) { box.replaceChildren(h('div', { class: 'empty' }, 'No members match “' + S.mSearch + '”.')); return; }
+    const tbody = h('tbody');
+    for (const m of rows) {
+      const open = S.openMember === m.contactId;
+      const tr = h('tr', { class: 'click' + (open ? ' open' : ''), id: 'm-' + m.contactId, tabindex: '0', 'aria-expanded': String(open) });
+      const toggle = () => { S.openMember = open ? null : m.contactId; S.openGrade = null; renderMembers(); if (!open) loadModules(m.contactId); };
+      tr.addEventListener('click', toggle);
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      tr.append(
+        h('td', { class: 'c-person' }, h('div', { class: 'person' }, h('span', { class: 'caret', 'aria-hidden': 'true' }, icon('chev')), avatar(m.name), h('span', { style: 'min-width:0' }, h('b', null, m.name), h('small', null, m.email || 'No email on file', m.dup ? h('span', { class: 'dupflag' }, ' · Duplicate name') : null)))),
+        allMode ? h('td', { class: 'c-coh' }, 'C' + m.cohort.slice(1)) : null,
+        h('td', { class: 'c-prog', 'data-label': 'lessons' }, h('div', { class: 'bar' }, h('span', { class: 'track' }, h('span', { class: 'fill', style: 'width:' + (m.progress * 100).toFixed(1) + '%' })), h('span', null, m.done + ' / ' + m.total))),
+        h('td', { class: 'c-stat r' + (m.hwIn ? '' : ' zero'), 'data-label': 'turned in' }, fmtInt(m.hwIn)),
+        h('td', { class: 'c-stat r' + (m.waiting ? ' warnnum' : ' zero'), 'data-label': 'waiting' }, fmtInt(m.waiting)),
+        h('td', { class: 'c-stat r' + (m.passed ? ' oknum' : ' zero'), 'data-label': 'passed' }, fmtInt(m.passed)),
+        h('td', { class: 'c-stat r' + (m.redo ? ' badnum' : ' zero'), 'data-label': 'redo' }, fmtInt(m.redo)),
+        h('td', { class: 'hide-narrow c-login' + (m.login === 'no' ? ' is-no' : '') }, m.login === 'yes' ? 'Active' : m.login === 'no' ? h('span', { class: 'badnum' }, 'No login') : ''),
+        h('td', { class: 'hide-narrow c-last' }, m.last ? ago(m.last) + ' ago' : ''));
+      tbody.append(tr);
+      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: allMode ? '9' : '8' }, memberPanel(m))));
+    }
+    box.replaceChildren(h('table', null,
+      h('thead', null, h('tr', null,
+        headCell('members', 'name', 'Member'), allMode ? headCell('members', 'cohort', 'Cohort') : null, headCell('members', 'progress', 'Lessons done'),
+        headCell('members', 'hwIn', 'Turned in', 'r'), headCell('members', 'waiting', 'Waiting', 'r'),
+        headCell('members', 'passed', 'Passed', 'r'), headCell('members', 'redo', 'Redo', 'r'),
+        h('th', { class: 'plain hide-narrow', scope: 'col' }, 'Course login'), headCell('members', 'last', 'Last activity', 'hide-narrow'))),
+      tbody));
+  }
+  function memberPanel(m) {
+    const facts = h('dl', { class: 'facts' });
+    const fact = (k, v) => facts.append(h('div', null, h('dt', null, k), h('dd', { title: v || '' }, v || '—')));
+    fact('Email', m.email); fact('Phone', fmtPhone(m.phone)); fact('Cohort', 'Cohort ' + m.cohort.slice(1)); fact('Paid', fmtDay(m.wonAt));
+    fact('Course login', m.login === 'yes' ? 'Active since ' + fmtDay(m.enrolledAt) : m.login === 'no' ? 'No course login' : '');
+    fact('Lessons done', m.done + ' of ' + m.total + ' (' + fmtPct(m.progress) + ')');
+    fact('Homework', m.hwIn + ' of ' + D.assignments.length + ' turned in');
+    const mods = h('div', { class: 'mods' });
+    const cp = S.catProg.get(m.contactId);
+    if (!cp) mods.append(h('span', { class: 'muted' }, S.mode === 'snapshot' ? 'Module progress shows when GoHighLevel is connected. Lesson progress is above.' : 'Loading module progress…'));
+    else if (cp.error) mods.append(h('span', { class: 'muted' }, 'Module progress did not load: ' + cp.error));
+    else {
+      const byId = new Map(cp.map((c) => [c.categoryId, Number(c.progress) || 0]));
+      for (const mod of S.modules.slice().sort((a, b) => a.seq - b.seq)) {
+        const p = byId.get(mod.id) || 0;
+        mods.append(h('div', { class: 'mod' }, h('span', null, mod.title), h('div', { class: 'bar' }, h('span', { class: 'track' }, h('span', { class: 'fill', style: 'width:' + p + '%' })), h('span', null, p + '%'))));
+      }
+    }
+    const tb = h('tbody');
+    for (const l of D.assignments) {
+      const key = m.contactId + '|' + l.id;
+      const x = D.latest.get(key);
+      const files = D.files.get(key) || [];
+      const gradeOpen = S.openGrade === key;
+      tb.append(h('tr', { class: 'hwrow' + (x ? '' : ' none') },
+        h('td', { class: 'c-a' }, l.short, l.short !== l.title ? h('span', { class: 'sub2' }, l.title) : null),
+        h('td', { class: 'c-s' }, pill(x ? x.rec.status : null)),
+        h('td', { class: 'c-t r' }, x ? h('span', null, h('span', { class: 'phone-only' }, 'Try '), x.att) : ''),
+        h('td', { class: 'hide-narrow' }, x ? fmtWhen(D.timeOf(m.contactId, l.id)) : ''),
+        h('td', { class: 'c-f' }, fileLinks(files, { member: m.name, lesson: l.short })),
+        h('td', { class: 'c-b r' }, x ? h('button', { type: 'button', class: 'btn small', onclick: (e) => { e.stopPropagation(); S.openGrade = gradeOpen ? null : key; renderMembers(); } }, gradeOpen ? 'Close' : (x.rec.status === 'processing' ? 'Grade' : 'Regrade')) : '')));
+      if (gradeOpen && x) tb.append(h('tr', { class: 'gradebox' }, h('td', { colspan: '6' }, grader(x.rec, { memberName: m.name, lessonShort: l.short, gradeKey: key }))));
+    }
+    const panel = h('div', { class: 'dpanel' }, facts, h('h3', { class: 'sec' }, 'Module progress'), mods, h('h3', { class: 'sec' }, 'Assignments'),
+      h('div', { class: 'tablebox hwtable' }, h('table', null,
+        h('thead', null, h('tr', null, ['Assignment', 'Status', 'Try', 'Turned in', 'Files', ''].map((t, i) => h('th', { class: 'plain' + (i === 2 || i === 5 ? ' r' : '') + (i === 3 ? ' hide-narrow' : ''), scope: 'col' }, t)))), tb)));
+    panel.addEventListener('click', (e) => e.stopPropagation());
+    return panel;
+  }
+  async function loadModules(contactId) {
+    if (!S.mcp || S.mode === 'snapshot' || S.catProg.has(contactId)) return;
+    try {
+      const d = await ghl('list-category-progress', { path: { productId: CFG.product }, query: { contactId } }, 'Module progress for one member');
+      S.catProg.set(contactId, (d && d.categories) || []);
+    } catch (e) { S.catProg.set(contactId, { error: statusOf(e) === 404 ? 'no course login' : errorText(e) }); }
+    if (S.openMember === contactId) renderMembers();
+  }
+  function openMember(contactId, gradeKey) {
+    S.openMember = contactId;
+    S.openGrade = gradeKey || null;
+    S.mSearch = '';
+    $('#m-search').value = '';
+    show('members', true);
+    renderMembers();
+    loadModules(contactId);
+    const row = document.getElementById('m-' + contactId);
+    if (row) row.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  // ---------- lessons ----------
+  function renderLessons() {
+    const box = $('#lessons-list');
+    if (S.err.lessons && !S.course.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.lessons)); return; }
+    if (!S.course.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading lessons…' : 'Lessons load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    const st = D.lessonStats;
+    const withHw = st.filter((s) => s.passed + s.waiting + s.redo > 0);
+    const top = withHw.slice().sort((a, b) => (b.passed + b.waiting + b.redo) - (a.passed + a.waiting + a.redo))[0];
+    const furthest = withHw[withHw.length - 1];
+    const ins = $('#insight');
+    if (!D.members.length) ins.textContent = 'No paid members in ' + cohortName() + ' yet.';
+    else if (!top) ins.textContent = 'No homework turned in yet in ' + cohortName() + '.';
+    else ins.replaceChildren(h('b', null, fmtInt(top.passed + top.waiting + top.redo) + ' of ' + fmtInt(D.members.length)), ' members turned in ', h('b', null, top.lesson.short), furthest && furthest !== top ? ['; the furthest anyone has reached is ', h('b', null, furthest.lesson.short), '.'] : '. No homework turned in past it yet.');
+    box.replaceChildren(h('table', null,
+      h('thead', null, h('tr', null, ['Assignment', 'Lesson done', 'Turned in', 'Waiting', 'Passed', 'Redo', 'Not turned in'].map((t, i) => h('th', { class: 'plain' + (i ? ' r' : '') + (i === 6 ? ' hide-narrow' : ''), scope: 'col' }, t)))),
+      h('tbody', null, st.map((s) => h('tr', { class: 'lrow' },
+        h('td', { class: 'c-a' }, s.lesson.short, h('span', { class: 'sub2' }, s.lesson.module)),
+        h('td', { class: 'c-stat keep r', 'data-label': 'lesson done' }, fmtInt(s.done)),
+        h('td', { class: 'c-stat keep r' + (s.passed + s.waiting + s.redo ? '' : ' zero'), 'data-label': 'turned in' }, fmtInt(s.passed + s.waiting + s.redo)),
+        h('td', { class: 'c-stat r' + (s.waiting ? ' warnnum' : ' zero'), 'data-label': 'waiting' }, fmtInt(s.waiting)),
+        h('td', { class: 'c-stat r' + (s.passed ? ' oknum' : ' zero'), 'data-label': 'passed' }, fmtInt(s.passed)),
+        h('td', { class: 'c-stat r' + (s.redo ? ' badnum' : ' zero'), 'data-label': 'redo' }, fmtInt(s.redo)),
+        h('td', { class: 'r zero hide-narrow' }, fmtInt(s.none)))))));
+    renderMap();
+  }
+  function lessonHead(l, idx, done, total) {
+    const m = /^Day\s+(\d+)\s*·\s*(.+)$/.exec(l.short);
+    const top = m ? 'Day ' + m[1] : (idx === 0 && /welcome/i.test(l.module) ? 'Welcome' : '#' + (idx + 1));
+    const sub = m ? m[2] : (top === 'Welcome' ? 'Start here' : l.short);
+    return h('span', { class: 'lh' }, h('span', { class: 'lt' }, top), h('span', { class: 'lt', style: 'font-weight:500;color:var(--ink-2)' }, sub), h('small', null, done + '/' + total));
+  }
+  function renderMap() {
+    const box = $('#map');
+    if (!S.course.length || !D.members.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading the lesson map…' : 'The map loads when this page is opened in claude.ai.')); return; }
+    const byCoh = new Map();
+    for (const p of D.members) { if (!byCoh.has(p.cohort)) byCoh.set(p.cohort, []); byCoh.get(p.cohort).push(p); }
+    const cohorts = [...byCoh.keys()].sort((a, b) => Number(b.slice(1)) - Number(a.slice(1)));
+    for (const c of cohorts) byCoh.get(c).sort((a, b) => b.done - a.done || b.hwIn - a.hwIn || a.name.localeCompare(b.name));
+    const total = D.members.length;
+    const doneCount = S.course.map((l) => D.members.filter((p) => D.timeOf(p.contactId, l.id)).length);
+    // module header spans
+    const mods = [];
+    S.course.forEach((l, i) => { const last = mods[mods.length - 1]; if (last && last.name === l.module) last.span++; else mods.push({ name: l.module || 'Lessons', span: 1, start: i }); });
+    const starts = new Set(mods.map((m) => m.start));
+    const tip = h('div', { class: 'tip', hidden: true });
+    const tb = h('tbody');
+    for (const c of cohorts) {
+      const ppl = byCoh.get(c);
+      const turned = ppl.filter((p) => p.hwIn > 0).length;
+      tb.append(h('tr', { class: 'cohrow' }, h('th', { scope: 'rowgroup', colspan: String(S.course.length + 2) }, 'Cohort ' + c.slice(1), h('small', null, ppl.length + (ppl.length === 1 ? ' member' : ' members') + ' · ' + turned + ' turned in homework'))));
+      for (const p of ppl) {
+        const tr = h('tr', { class: 'mrow' }, h('th', { scope: 'row', class: 'namecol', title: p.name + (p.email ? ' · ' + p.email : ' · no email on file') }, p.name));
+        S.course.forEach((l, li) => {
+          const key = p.contactId + '|' + l.id;
+          const when = D.timeOf(p.contactId, l.id);
+          const x = D.latest.get(key);
+          const cls = 'cell' + (x ? ' ' + x.rec.status : (when ? ' done' : ''));
+          const label = p.name + ', ' + l.short + ': ' + (x ? (ST[x.rec.status] || { label: x.rec.status }).label : (when ? 'lesson done' : 'not done'));
+          const cell = x ? h('button', { type: 'button', class: cls, 'aria-label': label + '. Open for grading' }) : h('span', { class: cls, role: 'img', tabindex: '-1', 'aria-label': label });
+          const showTip = () => {
+            tip.replaceChildren(h('b', null, p.name), h('span', null, l.title), h('span', { class: 'muted' }, when ? 'Lesson done ' + fmtWhen(when) : 'Lesson not marked done'),
+              l.isAssignment ? h('span', { class: 'muted' }, x ? 'Homework: ' + (ST[x.rec.status] || { label: x.rec.status }).label + (x.att > 1 ? ' (try ' + x.att + ')' : '') : 'No homework turned in') : null,
+              x ? h('span', { class: 'muted' }, 'Click to open for grading') : null);
+            tip.hidden = false;
+            const wr = box.getBoundingClientRect(), cr = cell.getBoundingClientRect();
+            let left = cr.right - wr.left + box.scrollLeft + 8;
+            const maxLeft = box.scrollLeft + box.clientWidth - tip.offsetWidth - 6;
+            if (left > maxLeft) left = Math.max(box.scrollLeft + 6, cr.left - wr.left + box.scrollLeft - tip.offsetWidth - 8);
+            let top = cr.top - wr.top + box.scrollTop;
+            const maxTop = box.scrollTop + box.clientHeight - tip.offsetHeight - 6;
+            if (top > maxTop) top = Math.max(box.scrollTop + 6, maxTop);
+            tip.style.left = left + 'px';
+            tip.style.top = top + 'px';
+          };
+          cell.addEventListener('mouseenter', showTip); cell.addEventListener('focus', showTip);
+          cell.addEventListener('mouseleave', () => { tip.hidden = true; }); cell.addEventListener('blur', () => { tip.hidden = true; });
+          if (x) cell.addEventListener('click', () => openMember(p.contactId, key));
+          tr.append(h('td', { class: starts.has(li) ? 'modstart' : null }, cell));
+        });
+        tr.append(h('td', { class: 'cnt' }, p.done + ' / ' + p.total));
+        tb.append(tr);
+      }
+    }
+    const thead = h('thead', null,
+      h('tr', { class: 'modhead' }, h('th', { class: 'namecol', scope: 'col' }), mods.map((m) => h('th', { scope: 'colgroup', colspan: String(m.span), class: 'modstart', title: m.name }, /^welcome/i.test(m.name) ? '' : m.name)), h('th', { scope: 'col' })),
+      h('tr', { class: 'lessons' }, h('th', { class: 'namecol', scope: 'col' }, total + ' members'), S.course.map((l, i) => h('th', { scope: 'col', title: l.title + ' · ' + doneCount[i] + ' of ' + total + ' done', class: starts.has(i) ? 'modstart' : null }, lessonHead(l, i, doneCount[i], total))), h('th', { scope: 'col', class: 'cnt' }, 'Done')));
+    const cols = h('colgroup', null, h('col', { style: 'width:180px' }), S.course.map(() => h('col')), h('col', { style: 'width:64px' }));
+    box.replaceChildren(h('table', { class: 'map' }, cols, thead, tb), tip);
+  }
+
+  // ---------- uploads ----------
+  function renderUploads() {
+    const box = $('#uploads-list');
+    if (S.err.assess && !S.assess.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.assess)); return; }
+    if (!S.assess.length && !S.loadedAt) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading uploads…' : 'Uploads load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (graderFocused() && box.contains(document.activeElement)) return;
+    const q = S.uSearch.trim().toLowerCase();
+    let rows = D.uploads.filter((u) => (!S.uFilter || u.status === S.uFilter) && (!q || (u.member.name + ' ' + u.lesson.title + ' ' + u.files.map((f) => f.title).join(' ')).toLowerCase().includes(q)));
+    rows = sortRows(rows, S.sort.uploads, { turnedIn: (u) => u.turnedIn, name: (u) => u.member.name.toLowerCase(), lesson: (u) => u.lesson.order, status: (u) => u.status, attempt: (u) => u.attempt });
+    if (!rows.length) { box.replaceChildren(h('div', { class: 'empty' }, D.uploads.length ? 'No uploads match this filter.' : 'No files uploaded yet in ' + cohortName() + '.')); return; }
+    const tb = h('tbody');
+    for (const u of rows) {
+      const gk = 'u|' + u.key;
+      const gradeOpen = S.openGrade === gk;
+      tb.append(h('tr', { class: 'urow' },
+        h('td', { class: 'hide-narrow c-d' }, fmtWhen(u.turnedIn)),
+        h('td', { class: 'c-p' }, h('div', { class: 'person' }, avatar(u.member.name), h('b', null, u.member.name))),
+        h('td', { class: 'c-l' }, u.lesson.short),
+        h('td', { class: 'c-s' }, pill(u.status)),
+        h('td', { class: 'c-t r' }, h('span', { class: 'phone-only' }, 'Try '), u.attempt),
+        h('td', { class: 'c-f' }, fileLinks(u.files, { member: u.member.name, lesson: u.lesson.short })),
+        h('td', { class: 'c-b r' }, u.isLatest ? h('button', { type: 'button', class: 'btn small', onclick: () => { S.openGrade = gradeOpen ? null : gk; renderUploads(); } }, gradeOpen ? 'Close' : (u.status === 'processing' ? 'Grade' : 'Regrade')) : h('span', { class: 'muted', title: 'An earlier try; grade the latest one' }, 'Earlier try'))));
+      if (gradeOpen && u.isLatest) tb.append(h('tr', { class: 'gradebox' }, h('td', { colspan: '7' }, grader(u.rec, { memberName: u.member.name, lessonShort: u.lesson.short, gradeKey: gk }))));
+    }
+    box.replaceChildren(h('table', null,
+      h('thead', null, h('tr', null,
+        headCell('uploads', 'turnedIn', 'Turned in', 'hide-narrow'), headCell('uploads', 'name', 'Member'), headCell('uploads', 'lesson', 'Lesson'),
+        headCell('uploads', 'status', 'Status'), headCell('uploads', 'attempt', 'Try', 'r'), h('th', { class: 'plain', scope: 'col' }, 'Files'), h('th', { class: 'plain', scope: 'col' }, h('span', { class: 'muted' }, 'Grade')))),
+      tb));
+  }
+
+  // ---------- search ----------
+  function renderResults() {
+    const box = $('#results');
+    const q = $('#q').value.trim().toLowerCase();
+    if (!q || !D) { box.hidden = true; return; }
+    const ms = D.members.filter((m) => (m.name + ' ' + m.email).toLowerCase().includes(q)).slice(0, 5);
+    const fs = D.fileList.filter((u) => (u.title + ' ' + u.member.name).toLowerCase().includes(q)).slice(0, 5);
+    const kids = [];
+    if (ms.length) {
+      kids.push(h('div', { class: 'rgroup' }, 'Members'));
+      for (const m of ms) kids.push(h('button', { type: 'button', class: 'ritem', onclick: () => { box.hidden = true; $('#q').value = ''; openMember(m.contactId); } }, avatar(m.name), h('span', null, m.name, h('small', null, m.email || 'Cohort ' + m.cohort.slice(1)))));
+    }
+    if (fs.length) {
+      kids.push(h('div', { class: 'rgroup' }, 'Files'));
+      for (const f of fs) {
+        const a = h('button', { type: 'button', class: 'ritem' }, h('span', { class: 'av' }, extOf(f.title).slice(0, 4)), h('span', { style: 'min-width:0' }, f.title, h('small', null, f.member.name + ' · ' + f.lesson.short)));
+        a.addEventListener('click', (e) => { e.preventDefault(); box.hidden = true; openViewer([{ url: f.url, title: f.title, attempt: f.attempt || 1 }], 0, { member: f.member.name, lesson: f.lesson.short }, $('#q')); });
+        kids.push(a);
+      }
+    }
+    if (!kids.length) kids.push(h('div', { class: 'empty', style: 'padding:14px' }, 'No members or files match “' + $('#q').value.trim() + '” in ' + cohortName() + '.'));
+    box.replaceChildren(...kids);
+    box.hidden = false;
+  }
+
+  // ---------- views & controls ----------
+  const VIEWS = ['grade', 'members', 'lessons', 'uploads'];
+  function show(view, push) {
+    if (!VIEWS.includes(view)) view = 'grade';
+    S.view = view;
+    for (const v of VIEWS) {
+      $('#view-' + v).hidden = v !== view;
+      const a = $('#nav-' + v);
+      if (v === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    }
+    if (view !== 'grade' && S.sheet) { S.sheet = false; if (D) renderInbox(); }
+    syncSheet();
+    if (push && location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch (_) { /* hash only */ } }
+  }
+  for (const a of document.querySelectorAll('.nav')) a.addEventListener('click', (e) => { e.preventDefault(); show(a.dataset.view, true); window.scrollTo({ top: 0 }); });
+  window.addEventListener('hashchange', () => show(location.hash.slice(1), false));
+  async function setCohort(c) {
+    S.cohort = c; S.openMember = null; S.openGrade = null; S.sel = null; S.selUser = false;
+    renderAll();
+    const first = document.querySelector('.coh[aria-checked="true"]');
+    if (first) first.focus();
+    if (S.mcp && S.loadedAt && S.mode !== 'snapshot') {
+      try { await loadTimes(cohortMembers().map((r) => r.contactId)); } catch (e) { banner('bad', errorText(e)); }
+      renderAll();
+    }
+  }
+  $('#cohorts').addEventListener('keydown', (e) => {
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    const btns = [...document.querySelectorAll('.coh')];
+    const i = btns.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    const n = btns[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length];
+    n.click();
+  });
+  $('#coh-select').addEventListener('change', (e) => setCohort(e.target.value));
+  $('#refresh').addEventListener('click', () => { S.catProg = new Map(); if (S.mode === 'snapshot') loadSnapshot(); else loadAll('manual'); });
+  $('#start').addEventListener('click', () => {
+    if (!D || !D.queue.length) return;
+    show('grade', true);
+    if (!S.sel) S.sel = D.queue[0].rec.id;
+    if (isPhone()) { selectQueue(S.sel); return; }
+    $('#inbox-card').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const b = document.getElementById('pass-' + S.sel);
+    if (b) b.focus({ preventScroll: true });
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && S.sheet && !$('#viewer').open) closeSheet(); });
+  phoneMQ.addEventListener('change', () => { if (!isPhone()) S.sheet = false; syncSheet(); });
+  $('#m-search').addEventListener('input', (e) => { S.mSearch = e.target.value; renderMembers(); });
+  $('#u-search').addEventListener('input', (e) => { S.uSearch = e.target.value; renderUploads(); });
+  for (const c of document.querySelectorAll('.chip')) c.addEventListener('click', () => {
+    S.uFilter = c.dataset.f || '';
+    for (const o of document.querySelectorAll('.chip')) o.setAttribute('aria-pressed', String(o === c));
+    renderUploads();
+  });
+  $('#q').addEventListener('input', renderResults);
+  $('#q').addEventListener('focus', renderResults);
+  $('#q').addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.target.value = ''; $('#results').hidden = true; } });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.search')) $('#results').hidden = true; });
+  setInterval(() => {
+    if (document.hidden || S.loading || !S.loadedAt || graderFocused() || hasDrafts()) return;
+    if (S.mode === 'snapshot') { if (!S.snapCheck || Date.now() - S.snapCheck >= CFG.autoRefreshMs) { S.snapCheck = Date.now(); loadSnapshot(); } return; }
+    if (Date.now() - S.loadedAt.getTime() >= CFG.autoRefreshMs) loadAll('auto');
+  }, 30000);
+
+  // ---------- boot ----------
+  $('#today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  show(location.hash.slice(1) || 'grade', false);
+  D = derive();
+  renderAll();
+  const use = window.claude && typeof window.claude.use === 'function' ? window.claude.use('mcp') : Promise.resolve(null);
+  Promise.resolve(use).then((mcp) => {
+    if (!mcp) {
+      S.liveWhy = 'this view has no connector access (claude.use("mcp") returned nothing)';
+      loadMirror();
+      syncState('busy', 'Opening the saved copy…');
+      loadSnapshot().then((ok) => {
+        if (ok) return;
+        banner('', 'Nothing is saved here yet. The data appears once someone with GoHighLevel connected opens this page.');
+        $('#banner').className = 'banner';
+        addDiag();
+        $('#refresh').disabled = true;
+        syncState('', 'Not connected');
+        renderAll();
+      });
+      return;
+    }
+    S.mcp = mcp;
+    loadMirror();
+    loadAll('first');
+  }, () => { banner('', 'Live GoHighLevel data loads when this page is opened in claude.ai with the Gohighlevel connector added.'); });
+})();
+</script>
+</body></html>
