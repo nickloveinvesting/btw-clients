@@ -692,6 +692,23 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
 .seg button { border: 0; background: none; border-radius: 9px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: background-color .15s, color .15s; }
 .seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); }
+.ov-head .tools { position: relative; }
+.seg .ov-more { display: inline-flex; align-items: center; justify-content: center; gap: 4px; max-width: 220px; }
+.seg .ov-more span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg .ov-more .ico { width: 14px; height: 14px; flex: none; transition: transform .15s; }
+.seg .ov-more[aria-expanded="true"] .ico { transform: rotate(180deg); }
+.ov-menu { position: absolute; z-index: 30; top: calc(100% + 8px); right: 0; width: 320px; padding: 10px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 32px rgba(0,0,0,.14); }
+.ov-mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.ov-mgrid button { text-align: left; border: 0; background: none; border-radius: 9px; padding: 9px 10px; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.ov-mgrid button:hover, .ov-mgrid button:focus-visible { background: var(--soft); }
+.ov-mgrid button[aria-checked="true"] { background: var(--chart-wash); }
+.ov-mgrid small { display: block; font-weight: 500; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.ov-custom { padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.ov-mh { font-size: 12px; font-weight: 600; color: var(--ink-2); padding: 0 2px; }
+.ov-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ov-dates label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.ov-dates input { font: inherit; font-size: 13px; padding: 7px 8px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); min-width: 0; }
+.ov-derr { margin: 0; font-size: 12px; color: var(--bad); }
 .ov-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .ov-kpi { position: relative; background: var(--panel); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
 .ov-kl { font-size: 13px; font-weight: 600; color: var(--ink-2); }
@@ -821,6 +838,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 @media (max-width: 640px) { .ov-gstats4 { grid-template-columns: 1fr 1fr; } .deal-n { grid-template-columns: 1fr 1fr; } #members-list td.c-onb { order: 1; } }
 @media (max-width: 640px) {
   .ov-head .tools { width: 100%; } .seg { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); } .seg button { min-height: 36px; }
+  #ov-period { grid-template-columns: repeat(4, minmax(0, 1fr)); } #ov-period button { padding: 6px 6px; }
+  .ov-menu { left: 0; right: 0; width: auto; }
   .ov-kpis { gap: 10px; } .ov-kpi { padding: 14px; } .ov-val { font-size: 26px; } .ov-spark { width: 56px; right: 12px; top: 14px; }
   .ov-ks { font-size: 12px; } .ov-delta { font-size: 11.5px; }
   .ov-body { padding: 4px 14px 14px; }
@@ -912,6 +931,19 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
             <button type="button" data-p="7" aria-pressed="false">7 days</button>
             <button type="button" data-p="30" aria-pressed="true">30 days</button>
             <button type="button" data-p="0" aria-pressed="false">All time</button>
+            <button type="button" id="ov-more" class="ov-more" aria-haspopup="true" aria-expanded="false" aria-pressed="false" aria-controls="ov-menu"><span id="ov-more-l">More</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+          <div class="ov-menu" id="ov-menu" role="menu" aria-label="More time ranges" hidden>
+            <div class="ov-mgrid" id="ov-presets"></div>
+            <form class="ov-custom" id="ov-custom">
+              <div class="ov-mh">Pick dates</div>
+              <div class="ov-dates">
+                <label><span>From</span><input type="date" id="ov-from" required></label>
+                <label><span>To</span><input type="date" id="ov-to" required></label>
+              </div>
+              <p class="ov-derr" id="ov-derr" role="alert" hidden></p>
+              <button type="submit" class="btn primary block">Show these dates</button>
+            </form>
           </div>
         </div>
       </div>
@@ -2924,7 +2956,51 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   // Program health for the selected cohort and period. Built from the same GoHighLevel data as the other tabs:
   // lesson completion times per member, homework status, course logins.
   const DAYMS = 86400000;
-  S.ovPeriod = 30; S.ovAnimKey = '';
+  S.ovRange = { kind: 'last', days: 30 }; S.ovAnimKey = '';
+  // Overview time range. 'last' = rolling N days ending today, 'all' = since the first lesson, 'fixed' = a preset or picked dates.
+  const addDay = (ms, n) => { const d = new Date(ms); d.setDate(d.getDate() + n); return dayStart(d.getTime()); };
+  const fmtRange = (a, b) => a === b ? fmtShort(a) : fmtShort(a) + ' – ' + fmtShort(b);
+  function ovRange() {
+    const r = S.ovRange, today = dayStart(Date.now());
+    if (r.kind === 'all') return { kind: 'all', start: null, end: today, n: 0, cmp: false, label: 'all time', key: 'all' };
+    const before = (a, n) => ({ prevStart: addDay(a, -n), prevEnd: addDay(a, -1), vs: n === 1 ? 'vs the day before' : 'vs the ' + n + ' days before' });
+    if (r.kind === 'last') { const a = addDay(today, -(r.days - 1)); return Object.assign({ kind: 'last', start: a, end: today, n: r.days, cmp: true, label: 'last ' + r.days + ' days', key: 'last' + r.days }, before(a, r.days)); }
+    const n = dayIdx(r.end, r.start) + 1;
+    return Object.assign({ kind: 'fixed', start: r.start, end: r.end, n, cmp: true, label: r.label, key: r.start + '-' + r.end, preset: r.preset || null }, before(r.start, n), r.prevStart != null ? { prevStart: r.prevStart, prevEnd: r.prevEnd, vs: r.vs } : {});
+  }
+  function ovPresets() {
+    const today = dayStart(Date.now()), dow = (new Date(today).getDay() + 6) % 7, mon = addDay(today, -dow);
+    const m0 = new Date(today); m0.setDate(1); const monthStart = dayStart(m0.getTime());
+    const lm = new Date(monthStart); lm.setMonth(lm.getMonth() - 1); const lastMonthStart = dayStart(lm.getTime()), lastMonthEnd = addDay(monthStart, -1);
+    const fixed = (id, name, a, b, label, prev) => ({ id, name, sub: fmtRange(a, b), r: Object.assign({ kind: 'fixed', start: a, end: b, label: label || name.toLowerCase(), preset: id }, prev || {}) });
+    const pv = (a, b, vs) => ({ prevStart: a, prevEnd: b, vs });
+    const lm2 = new Date(lastMonthStart); lm2.setMonth(lm2.getMonth() - 1); const twoMonthsStart = dayStart(lm2.getTime());
+    const nTm = dayIdx(today, monthStart);
+    const last = (d) => ({ id: 'l' + d, name: 'Last ' + d + ' days', sub: fmtRange(addDay(today, -(d - 1)), today), r: { kind: 'last', days: d } });
+    return [
+      fixed('today', 'Today', today, today, null, pv(addDay(today, -1), addDay(today, -1), 'vs yesterday')),
+      fixed('yday', 'Yesterday', addDay(today, -1), addDay(today, -1), null, pv(addDay(today, -2), addDay(today, -2), 'vs the day before')),
+      fixed('tw', 'This week', mon, today, null, pv(addDay(mon, -7), addDay(today, -7), 'vs the same days last week')),
+      fixed('lw', 'Last week', addDay(mon, -7), addDay(mon, -1), null, pv(addDay(mon, -14), addDay(mon, -8), 'vs the week before')),
+      fixed('tm', 'This month', monthStart, today, null, pv(lastMonthStart, Math.min(addDay(lastMonthStart, nTm), lastMonthEnd), 'vs the same days last month')),
+      fixed('lm', 'Last month', lastMonthStart, lastMonthEnd, new Date(lastMonthStart).toLocaleDateString('en-US', { month: 'long' }), pv(twoMonthsStart, addDay(lastMonthStart, -1), 'vs ' + new Date(twoMonthsStart).toLocaleDateString('en-US', { month: 'long' }))),
+      last(14), last(60), last(90),
+      ...Object.entries(CFG.cohortStart).filter(([, st]) => st <= etDay(Date.now())).slice(-1).map(([c, st]) => { const a = dayStart(new Date(st + 'T12:00:00').getTime()); return fixed('coh', 'Since Cohort ' + c.slice(1) + ' start', a, today, 'since Cohort ' + c.slice(1) + ' started'); }),
+    ];
+  }
+  const ymdLocal = (ms) => { const d = new Date(ms); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  function setOvRange(r) { S.ovRange = r; closeOvMenu(); renderOverview(); }
+  function openOvMenu() {
+    const menu = $('#ov-menu'), R = ovRange();
+    $('#ov-presets').replaceChildren(...ovPresets().map((p) => h('button', { type: 'button', role: 'menuitemradio', 'aria-checked': String((p.r.kind === 'last' && R.kind === 'last' && p.r.days === R.n) || (p.r.kind === 'fixed' && R.preset === p.id)), onclick: () => setOvRange(p.r) }, p.name, h('small', null, p.sub))));
+    const today = ymdLocal(Date.now());
+    for (const id of ['#ov-from', '#ov-to']) { $(id).max = today; $(id).min = '2026-08-01'; }
+    $('#ov-from').value = ymdLocal(R.start != null ? R.start : addDay(R.end, -29)); $('#ov-to').value = ymdLocal(R.end);
+    $('#ov-derr').hidden = true;
+    menu.hidden = false; $('#ov-more').setAttribute('aria-expanded', 'true');
+    const first = menu.querySelector('[aria-checked="true"]') || menu.querySelector('button'); if (first) first.focus();
+  }
+  function closeOvMenu(refocus) { const menu = $('#ov-menu'); if (!menu || menu.hidden) return; menu.hidden = true; $('#ov-more').setAttribute('aria-expanded', 'false'); if (refocus) $('#ov-more').focus(); }
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dayStart = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
   const dayIdx = (ms, start) => Math.round((dayStart(ms) - start) / DAYMS);
@@ -2957,7 +3033,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     requestAnimationFrame(step);
   }
   function ovData() {
-    const P = S.ovPeriod;
+    const R = ovRange();
+    const P = R.cmp ? R.n : 0;
     const evs = [];
     for (const m of D.members) {
       const t = S.times.get(m.contactId);
@@ -2967,15 +3044,15 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const today = dayStart(Date.now());
     let first = today;
     for (const e of evs) if (e.ms < first) first = dayStart(e.ms);
-    const nDays = P || Math.max(14, dayIdx(today, first) + 1);
-    const start = today - (nDays - 1) * DAYMS;
+    const nDays = R.kind === 'all' ? Math.max(14, dayIdx(today, first) + 1) : R.n;
+    const start = R.kind === 'all' ? today - (nDays - 1) * DAYMS : R.start;
     const days = Array.from({ length: nDays }, (_, i) => ({ t: start + i * DAYMS, n: 0, hw: 0, who: new Set() }));
     const win = { lessons: 0, hw: 0, who: new Set() }, prev = { lessons: 0, hw: 0, who: new Set() };
-    const prevStart = start - nDays * DAYMS;
+    const inPrev = (ms) => R.cmp && ms >= R.prevStart && ms < addDay(R.prevEnd, 1);
     for (const e of evs) {
       const i = dayIdx(e.ms, start);
       if (i >= 0 && i < nDays) { days[i].n++; days[i].who.add(e.m.contactId); if (e.hw) days[i].hw++; win.lessons++; win.who.add(e.m.contactId); if (e.hw) win.hw++; }
-      else if (P && e.ms >= prevStart && e.ms < start) { prev.lessons++; prev.who.add(e.m.contactId); if (e.hw) prev.hw++; }
+      else if (inPrev(e.ms)) { prev.lessons++; prev.who.add(e.m.contactId); if (e.hw) prev.hw++; }
     }
     const dealDays = Array.from({ length: nDays }, () => 0);
     const dealWin = { n: 0, who: new Set() }, dealPrev = { n: 0 };
@@ -2983,7 +3060,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       const ms = new Date(dl.at).getTime(); if (isNaN(ms)) continue;
       const i = dayIdx(ms, start);
       if (i >= 0 && i < nDays) { dealDays[i]++; dealWin.n++; dealWin.who.add(dl.member.contactId); }
-      else if (P && ms >= prevStart && ms < start) dealPrev.n++;
+      else if (inPrev(ms)) dealPrev.n++;
     }
     const status = { active: [], stalled: [], notStarted: [], noLogin: [] };
     for (const m of D.members) {
@@ -2997,13 +3074,14 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       if (v.rec.status === 'passed' || v.rec.status === 'failed') { graded++; if (v.rec.status === 'failed') redo++; }
       if (v.rec.status === 'passed' && v.att === 1) firstTry++;
     }
-    return { P, days, win, prev, status, graded, firstTry, redo, nDays, start, dealDays, dealWin, dealPrev };
+    return { P, R, days, win, prev, status, graded, firstTry, redo, nDays, start, dealDays, dealWin, dealPrev };
   }
-  function deltaNode(cur, prv, P) {
+  function deltaNode(cur, prv, P, vsText) {
     if (!P) return h('span', { class: 'ov-delta flat' }, 'All time');
+    const vs = vsText || (P === 1 ? 'vs the day before' : 'vs the ' + P + ' days before');
     const d = cur - prv;
-    if (!d) return h('span', { class: 'ov-delta flat' }, 'Same as the ' + P + ' days before');
-    return h('span', { class: 'ov-delta ' + (d > 0 ? 'up' : 'down') }, icon(d > 0 ? 'trendUp' : 'trendDown'), (d > 0 ? '+' : '−') + fmtInt(Math.abs(d)) + ' vs the ' + P + ' days before');
+    if (!d) return h('span', { class: 'ov-delta flat' }, 'Same as ' + vs.replace(/^vs /, ''));
+    return h('span', { class: 'ov-delta ' + (d > 0 ? 'up' : 'down') }, icon(d > 0 ? 'trendUp' : 'trendDown'), (d > 0 ? '+' : '−') + fmtInt(Math.abs(d)) + ' ' + vs);
   }
   function renderOverview() {
     const box = $('#view-overview');
@@ -3012,14 +3090,18 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     $('#ov-sub').textContent = ready
       ? cohortName().replace(/^./, (c) => c.toUpperCase()) + ' · ' + fmtInt(D.members.length) + ' paid members · ' + fmtInt(S.course.length) + ' lessons' + (S.loadedAt ? ' · updated ' + S.loadedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '')
       : (S.mcp ? 'Loading ' + cohortName() + ' from GoHighLevel…' : 'Data loads once GoHighLevel is connected.');
-    for (const b of document.querySelectorAll('#ov-period button')) b.setAttribute('aria-pressed', String(Number(b.dataset.p) === S.ovPeriod));
+    const R0 = ovRange();
+    for (const b of document.querySelectorAll('#ov-period button[data-p]')) b.setAttribute('aria-pressed', String(Number(b.dataset.p) === 0 ? R0.kind === 'all' : (R0.kind === 'last' && R0.n === Number(b.dataset.p))));
+    const moreOn = R0.kind === 'fixed' || (R0.kind === 'last' && ![7, 30].includes(R0.n));
+    $('#ov-more').setAttribute('aria-pressed', String(moreOn));
+    $('#ov-more-l').textContent = moreOn ? (R0.kind === 'last' ? 'Last ' + R0.n + ' days' : R0.label.replace(/^./, (c) => c.toUpperCase())) : 'More';
     if (!ready) return;
     const O = ovData();
-    const key = S.cohort + '|' + S.ovPeriod + '|' + D.members.length;
+    const key = S.cohort + '|' + R0.key + '|' + D.members.length;
     const animate = key !== S.ovAnimKey;
     S.ovAnimKey = key;
     box.classList.toggle('ov-anim', animate && !reduceMotion());
-    const per = O.P ? 'last ' + O.P + ' days' : 'all time';
+    const per = O.R.label;
     // KPI tiles
     const tile = (label, val, fmt, sub, delta, trend) => {
       const v = h('div', { class: 'ov-val' });
@@ -3036,11 +3118,11 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const last14 = O.days.slice(-14);
     const passRate = O.graded ? O.firstTry / O.graded : 0;
     $('#ov-kpis').replaceChildren(
-      tile('Active members', O.win.who.size, (x) => fmtInt(Math.round(x)), 'of ' + fmtInt(D.members.length) + ' finished a lesson, ' + per, deltaNode(O.win.who.size, O.prev.who.size, O.P), spark(last14.map((d) => d.who.size))),
-      tile('Lessons finished', O.win.lessons, (x) => fmtInt(Math.round(x)), per, deltaNode(O.win.lessons, O.prev.lessons, O.P), spark(last14.map((d) => d.n))),
-      tile('Homework turned in', O.win.hw, (x) => fmtInt(Math.round(x)), per + ' · ' + fmtInt(D.queue.length) + ' waiting on review', deltaNode(O.win.hw, O.prev.hw, O.P), spark(last14.map((d) => d.hw))),
+      tile('Active members', O.win.who.size, (x) => fmtInt(Math.round(x)), 'of ' + fmtInt(D.members.length) + ' finished a lesson, ' + per, deltaNode(O.win.who.size, O.prev.who.size, O.P, O.R.vs), spark(last14.map((d) => d.who.size))),
+      tile('Lessons finished', O.win.lessons, (x) => fmtInt(Math.round(x)), per, deltaNode(O.win.lessons, O.prev.lessons, O.P, O.R.vs), spark(last14.map((d) => d.n))),
+      tile('Homework turned in', O.win.hw, (x) => fmtInt(Math.round(x)), per + ' · ' + fmtInt(D.queue.length) + ' waiting on review', deltaNode(O.win.hw, O.prev.hw, O.P, O.R.vs), spark(last14.map((d) => d.hw))),
       S.dealsOk || D.deals.length
-        ? tile('Deals submitted', O.dealWin.n, (x) => fmtInt(Math.round(x)), 'by ' + fmtInt(O.dealWin.who.size) + (O.dealWin.who.size === 1 ? ' member, ' : ' members, ') + per + ' · ' + fmtInt(D.deals.length) + ' all time', deltaNode(O.dealWin.n, O.dealPrev.n, O.P), spark(O.dealDays.slice(-14)))
+        ? tile('Deals submitted', O.dealWin.n, (x) => fmtInt(Math.round(x)), 'by ' + fmtInt(O.dealWin.who.size) + (O.dealWin.who.size === 1 ? ' member, ' : ' members, ') + per + ' · ' + fmtInt(D.deals.length) + ' all time', deltaNode(O.dealWin.n, O.dealPrev.n, O.P, O.R.vs), spark(O.dealDays.slice(-14)))
         : tile('Deals submitted', 0, () => '—', S.extErr.deals ? 'Deal form didn’t load' : 'Loading the Mastermind deal form…', h('span', { class: 'ov-delta flat' }, S.extErr.deals ? 'See the Deals card below' : '')));
     S.ovPassRate = passRate;
     renderTrend(O, animate);
@@ -3062,8 +3144,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       $('#ov-calls-rate').textContent = '—';
       return;
     }
-    const P = S.ovPeriod, since = P ? Date.now() - P * 86400000 : 0;
-    const inP = (d) => new Date(d.t).getTime() >= since;
+    const R = ovRange();
+    const inP = (d) => { const t = new Date(d.t).getTime(); return (R.start == null || t >= R.start) && t < addDay(R.end, 1); };
     const ms = D.members;
     const btw = idx.days.filter((d) => d.series === 'btw' && inP(d) && ms.some((m) => expectedFor(m.cohort, d.ymd)));
     const cols = btw.slice(-21).map((d) => {
@@ -3075,7 +3157,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     let seats = 0, filled = 0;
     for (const c of cols.length === btw.length ? cols : btw.map((d) => { const due = ms.filter((m) => expectedFor(m.cohort, d.ymd)); return { due: due.length, came: due.filter((m) => d.present.has(m.contactId)).length }; })) { seats += c.due; filled += c.came; }
     $('#ov-calls-rate').textContent = seats ? Math.round((filled / seats) * 100) + '%' : '—';
-    $('#ov-calls-sub').textContent = (cols.length ? cols.length + (cols.length === 1 ? ' call' : ' calls') + (btw.length > cols.length ? ' (latest ' + cols.length + ' of ' + btw.length + ')' : '') : 'No calls') + ', ' + (P ? 'last ' + P + ' days' : 'all time') + '';
+    $('#ov-calls-sub').textContent = (cols.length ? cols.length + (cols.length === 1 ? ' call' : ' calls') + (btw.length > cols.length ? ' (latest ' + cols.length + ' of ' + btw.length + ')' : '') : 'No calls') + ', ' + R.label + '';
     const missed = ms.filter((m) => m.att && m.att.missed3);
     if (!cols.length) box.replaceChildren(h('p', { class: 'muted' }, 'No Built to Win calls in this period for ' + cohortName() + '.'));
     else {
@@ -3315,7 +3397,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const host = $('#ov-trend');
     const total = O.days.reduce((t, d) => t + d.n, 0);
     $('#ov-trend-total').textContent = fmtInt(total);
-    $('#ov-trend-sub').textContent = 'Lessons finished per day, ' + (O.P ? 'last ' + O.P + ' days' : 'since the first lesson');
+    $('#ov-trend-sub').textContent = 'Lessons finished per day, ' + (O.R.kind === 'all' ? 'since the first lesson' : O.R.kind === 'fixed' && O.R.preset ? O.R.label + ' (' + fmtRange(O.R.start, O.R.end) + ')' : O.R.label);
     const avail = host.clientHeight - 8;
     const W = Math.max(280, host.clientWidth), H = W < 520 ? 200 : Math.max(240, Math.min(380, avail || 260)), padL = 34, padR = 12, padT = 14, padB = 26;
     const mx = niceMax(Math.max(...O.days.map((d) => d.n), 1));
@@ -3455,7 +3537,20 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         stat('Need a follow-up', fmtInt(D.follow.length), 'members to nudge', D.follow.length ? 'bad' : '')),
       h('button', { type: 'button', class: 'btn primary block', onclick: () => { show('grade', true); window.scrollTo({ top: 0 }); if (isPhone() && D.queue.length) selectQueue(D.queue[0].rec.id); } }, icon('check'), D.queue.length ? 'Grade the ' + D.queue.length + ' waiting' : 'Open the grading queue'));
   }
-  for (const b of document.querySelectorAll('#ov-period button')) b.addEventListener('click', () => { S.ovPeriod = Number(b.dataset.p); renderOverview(); });
+  for (const b of document.querySelectorAll('#ov-period button[data-p]')) b.addEventListener('click', () => { const p = Number(b.dataset.p); setOvRange(p ? { kind: 'last', days: p } : { kind: 'all' }); });
+  $('#ov-more').addEventListener('click', (e) => { e.stopPropagation(); if ($('#ov-menu').hidden) openOvMenu(); else closeOvMenu(true); });
+  $('#ov-menu').addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => closeOvMenu());
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#ov-menu').hidden) closeOvMenu(true); });
+  $('#ov-custom').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const f = $('#ov-from').value, t = $('#ov-to').value, err = $('#ov-derr');
+    if (!f || !t) { err.textContent = 'Pick both dates.'; err.hidden = false; return; }
+    const a = dayStart(new Date(f + 'T12:00:00').getTime()), b = dayStart(new Date(t + 'T12:00:00').getTime());
+    if (a > b) { err.textContent = '“From” has to be on or before “To”.'; err.hidden = false; return; }
+    if (b > dayStart(Date.now())) { err.textContent = '“To” can’t be in the future.'; err.hidden = false; return; }
+    setOvRange({ kind: 'fixed', start: a, end: b, label: fmtRange(a, b) });
+  });
   if (window.ResizeObserver) { let rt = 0, lastW = 0; new ResizeObserver((es) => { const w = Math.round(es[0].contentRect.width); if (Math.abs(w - lastW) < 8) return; lastW = w; clearTimeout(rt); rt = setTimeout(() => { const k = S.ovAnimKey; renderOverview(); S.ovAnimKey = k; }, 120); }).observe($('#view-overview')); }
 
   // ---------- views & controls ----------
