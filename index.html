@@ -3209,10 +3209,10 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const ceil = median(X.inP.map((d) => d.ceilN)), arv = median(X.inP.map((d) => d.arvN));
     const nCeil = X.inP.filter((d) => d.ceilN != null).length;
     $('#dl-kpis').replaceChildren(
-      tile('Deals submitted', X.inP.length, (x) => fmtInt(Math.round(x)), per, deltaNode(X.inP.length, X.prev.length, X.P), spark(days.map((d) => d.n))),
+      tile('Deals submitted', X.inP.length, (x) => fmtInt(Math.round(x)), X.P ? per : (X.base.length ? 'since ' + fmtShort(X.base[X.base.length - 1].at) : 'none yet'), deltaNode(X.inP.length, X.prev.length, X.P), spark(days.map((d) => d.n))),
       tile('Clients submitting', who.size, (x) => fmtInt(Math.round(x)), X.P ? fmtInt(firstTimers) + ' submitted for the first time' : 'avg ' + (who.size ? (X.inP.length / who.size).toFixed(1) : '0') + ' deals each', deltaNode(who.size, whoPrev.size, X.P)),
-      tile('Seller contacted', X.inP.length ? (yes / X.inP.length) * 100 : 0, (x) => Math.round(x) + '%', fmtInt(yes) + ' of ' + fmtInt(X.inP.length) + ' deals had a seller conversation', h('span', { class: 'ov-delta flat' }, per)),
-      tile('Median max offer', ceil || 0, (x) => (ceil == null ? '—' : money0(x)), nCeil ? 'from ' + nCeil + ' deals with a number · median ARV ' + money0(arv) : 'no numeric offers yet', h('span', { class: 'ov-delta flat' }, per)));
+      tile('Seller contacted', X.inP.length ? (yes / X.inP.length) * 100 : 0, (x) => Math.round(x) + '%', fmtInt(yes) + ' of ' + fmtInt(X.inP.length) + ' deals had a seller conversation', X.P ? h('span', { class: 'ov-delta flat' }, per) : null),
+      tile('Median max offer', ceil || 0, (x) => (ceil == null ? '—' : money0(x)), nCeil ? 'from ' + nCeil + ' deals with a number · median ARV ' + money0(arv) : 'no numeric offers yet', X.P ? h('span', { class: 'ov-delta flat' }, per) : null));
   }
   function renderDealWeeks(X, animate) {
     const host = $('#dl-weeks');
