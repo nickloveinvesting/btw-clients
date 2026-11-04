@@ -2956,7 +2956,6 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const ms = D.members, paid = ms.length;
     const steps = [
       { label: 'Paid members', n: paid },
-      ...(S.onbOk ? [{ label: 'Onboarding call with Jay', n: ms.filter((m) => m.onb.s === 'done').length }] : []),
       { label: 'Logged in to the course', n: ms.filter((m) => m.login !== 'no').length },
       { label: 'Finished a lesson', n: ms.filter((m) => m.done > 0 || m.last).length },
       { label: 'Turned in homework', n: ms.filter((m) => m.hwIn > 0).length },
