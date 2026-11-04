@@ -1,6 +1,6 @@
 // BTW Homework Dashboard: hosted on Railway, connected to GoHighLevel with one Private Integration key.
 // Variables: GHL_TOKEN (Private Integration token for the Unshakable sub-account), SESSION_SECRET,
-// DASH_USERS ("Name:passcode;Name:passcode"), optional GHL_COURSES_VERSION.
+// DASH_ACCOUNTS ("email:Name;email:Name"), DASH_PASSWORD (shared password), optional GHL_COURSES_VERSION.
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const PAGE = await Bun.file(import.meta.dir + "/index.html").text();
@@ -12,11 +12,13 @@ const FILE_PREFIX = "https://storage.googleapis.com/revex-membership-production/
 const TOKEN = Bun.env.GHL_TOKEN || "";
 const SECRET = Bun.env.SESSION_SECRET || "";
 const COURSES_VERSION = Bun.env.GHL_COURSES_VERSION || "v3";
-const USERS = new Map<string, string>(); // passcode -> name
-for (const part of (Bun.env.DASH_USERS || "").split(";")) {
+const PASSWORD = Bun.env.DASH_PASSWORD || "";
+const ACCOUNTS = new Map<string, string>(); // lowercased email -> display name
+for (const part of (Bun.env.DASH_ACCOUNTS || "").split(";")) {
   const i = part.indexOf(":");
-  if (i > 0) USERS.set(part.slice(i + 1).trim(), part.slice(0, i).trim());
+  if (i > 0) ACCOUNTS.set(part.slice(0, i).trim().toLowerCase(), part.slice(i + 1).trim());
 }
+function samePw(a: string, b: string) { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y); }
 
 type Op = { m: "GET" | "POST" | "PUT"; p: string; v: string; q?: string[]; write?: boolean };
 const C = COURSES_VERSION;
@@ -36,7 +38,7 @@ const ID = /^[A-Za-z0-9-]{1,64}$/;
 // ---------- sessions ----------
 const DAY = 86400;
 function sign(v: string) { return createHmac("sha256", SECRET).update(v).digest("base64url"); }
-function makeSession(name: string) {
+function makeSession(name: string) { // name = account email
   const exp = Math.floor(Date.now() / 1000) + 30 * DAY;
   const v = Buffer.from(name).toString("base64url") + "." + exp;
   return v + "." + sign(v);
@@ -50,8 +52,8 @@ function readSession(req: Request): string | null {
   const want = Buffer.from(sign(n + "." + exp)), got = Buffer.from(sig);
   if (want.length !== got.length || !timingSafeEqual(want, got)) return null;
   if (Number(exp) < Date.now() / 1000) return null;
-  const name = Buffer.from(n, "base64url").toString();
-  return [...USERS.values()].includes(name) ? name : null; // removing someone from DASH_USERS signs them out
+  const email = Buffer.from(n, "base64url").toString();
+  return ACCOUNTS.get(email) || null; // removing someone from DASH_ACCOUNTS signs them out
 }
 const cookie = (v: string, maxAge: number) => `btw_s=${v}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${maxAge}`;
 
@@ -76,10 +78,11 @@ input:focus{outline:2px solid var(--ink);outline-offset:1px}button{height:48px;b
 .err{background:var(--bad-soft);color:var(--ink);padding:10px 12px;border-radius:10px;font-size:14px}
 </style></head><body><form method="post" action="/login">
 <div class="logo"><span class="mark">BTW</span><b>Built to Win</b></div>
-<div><h1>Homework dashboard</h1><p>Sign in with the passcode Nick gave you.</p></div>
+<div><h1>Homework dashboard</h1><p>Sign in with your Unshakable email.</p></div>
 ${msg ? `<div class="err" role="alert">${esc(msg)}</div>` : ""}
 <input type="hidden" name="next" value="${esc(next)}">
-<label>Passcode<input name="code" type="password" autocomplete="current-password" autofocus required></label>
+<label>Email<input name="email" type="email" autocomplete="username" autocapitalize="none" placeholder="you@theunshakableinvestor.com" autofocus required></label>
+<label>Password<input name="password" type="password" autocomplete="current-password" required></label>
 <button type="submit">Sign in</button></form></body></html>`;
 }
 const html = (body: string, status = 200, extra: Record<string, string> = {}) =>
@@ -135,13 +138,14 @@ Bun.serve({
       const f = await req.formData();
       const next = String(f.get("next") || "/");
       const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
-      if (!SECRET || !USERS.size) return html(loginPage("The dashboard isn't set up yet (missing SESSION_SECRET or DASH_USERS).", safeNext), 503);
+      if (!SECRET || !ACCOUNTS.size || !PASSWORD) return html(loginPage("The dashboard isn't set up yet (missing SESSION_SECRET, DASH_ACCOUNTS or DASH_PASSWORD).", safeNext), 503);
       if (throttled(ip)) return html(loginPage("Too many tries. Wait 10 minutes, then try again.", safeNext), 429);
-      const name = USERS.get(String(f.get("code") || "").trim());
-      if (!name) { fail(ip); return html(loginPage("That passcode didn't match. Check it with Nick.", safeNext), 401); }
+      const email = String(f.get("email") || "").trim().toLowerCase();
+      const name = ACCOUNTS.get(email);
+      if (!name || !samePw(String(f.get("password") || ""), PASSWORD)) { fail(ip); return html(loginPage("That email and password don't match. Use your @theunshakableinvestor.com email.", safeNext), 401); }
       fails.delete(ip);
-      console.log(`[login] ${name}`);
-      return new Response(null, { status: 303, headers: { Location: safeNext, "Set-Cookie": cookie(makeSession(name), 30 * DAY) } });
+      console.log(`[login] ${name} <${email}>`);
+      return new Response(null, { status: 303, headers: { Location: safeNext, "Set-Cookie": cookie(makeSession(email), 30 * DAY) } });
     }
     if (u.pathname === "/logout") return new Response(null, { status: 303, headers: { Location: "/login", "Set-Cookie": cookie("", 0) } });
 
