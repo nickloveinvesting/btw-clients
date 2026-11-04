@@ -1227,17 +1227,17 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   }
   function errorText(e) {
     switch (e && e.code) {
-      case 'needs_reauth': return 'Your GoHighLevel connection expired. Reconnect Gohighlevel in claude.ai Settings → Connectors, then press Refresh.';
+      case 'needs_reauth': return 'GoHighLevel rejected the dashboard’s key. Update GHL_TOKEN in Railway, then press Refresh.';
       case 'server_not_connected':
-      case 'server_not_found': return 'GoHighLevel is not connected to your claude.ai account. Add Gohighlevel in claude.ai Settings → Connectors, then press Refresh.';
-      case 'selection_required': return 'You have more than one GoHighLevel connector. Choose one in the prompt claude.ai shows, then press Refresh.';
+      case 'server_not_found': return 'The dashboard has no GoHighLevel key. Set GHL_TOKEN in Railway, then press Refresh.';
+      case 'selection_required': return 'GoHighLevel didn’t answer. Press Refresh.';
       case 'not_in_manifest':
       case 'consent_required': return 'GoHighLevel is turned off for this page. Allow it from this page’s Permissions menu, then press Refresh.';
       case 'blocked_by_policy': return 'Your organization blocks GoHighLevel on this page.';
       case 'approval_required': return 'Your organization requires approval for each GoHighLevel call, which this page cannot ask for.';
       case 'not_granted':
       case 'capability_disabled':
-      case 'capability_removed': return 'This view cannot reach your connectors. Open the page in claude.ai.';
+      case 'capability_removed': return 'The dashboard couldn’t reach GoHighLevel. Press Refresh.';
       case 'server_unavailable':
       case 'rate_limited': return 'GoHighLevel did not answer in time. Press Refresh to try again.';
       case 'tool_error': return 'GoHighLevel refused the request: ' + ghlDetail(e).message;
@@ -1328,7 +1328,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   }
   // Zoom attendance for Built to Win, Mastermind and IGNITE calls. Served by the team site (Supabase sync of Zoom reports).
   async function loadAttendance() {
-    if (!window.__HOSTED) throw new Error('Call attendance shows on the team dashboard site.');
+    if (!window.__HOSTED) throw new Error('Call attendance needs the dashboard server.');
     const r = await fetch('/api/attendance', { credentials: 'same-origin', cache: 'no-store' });
     const d = await r.json().catch(() => null);
     if (!r.ok || !d || d.ok === false) throw new Error((d && d.message) || 'Attendance answered ' + r.status);
@@ -1442,7 +1442,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       S.mode = 'snapshot'; S.snapAt = new Date(snap.at || meta.at); S.loadedAt = S.snapAt; S.err = {};
       const when = S.snapAt.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
       syncState('busy', 'Saved copy · ' + when);
-      banner('', 'Saved copy from ' + when + '. To grade, connect GoHighLevel in your own claude.ai (Settings → Connectors), then reload.');
+      banner('', 'Saved copy from ' + when + '. Press Refresh to load live data.');
       $('#banner').className = 'banner';
       addDiag();
       $('#refresh').disabled = false;
@@ -1777,7 +1777,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (S.mode === 'snapshot') {
       return h('div', { class: 'grader' },
         h('div', { class: 'gtop' }, h('h3', null, 'Grade this homework'), h('span', { class: 'current' }, 'Status now ', pill(rec.status))),
-        h('p', { class: 'gmsg bad' }, icon('alert'), h('span', null, 'Grading saves straight to GoHighLevel, so it needs GoHighLevel connected in your own claude.ai account (Settings → Connectors). Reload this page after connecting.')),
+        h('p', { class: 'gmsg bad' }, icon('alert'), h('span', null, 'Grading couldn’t reach GoHighLevel. Press Refresh, then try again.')),
         ...(rec.feedback ? [h('p', { class: 'lastfb' }, 'Note on file: ' + rec.feedback)] : []));
     }
     // A regrade starts from what GoHighLevel holds now, so an existing note or score isn't wiped by accident.
@@ -2013,7 +2013,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     body.replaceChildren(h('div', { class: 'vstate' },
       icon('eye'),
       h('p', null, h('b', null, 'This file can’t be shown inside the dashboard.')),
-      h('p', null, why === 'notsynced' || why === 'nomake' ? 'This file hasn’t been opened in the dashboard yet, and fetching it needs the Make MCP connector in your claude.ai account. Once someone with it (Nick or Toby) opens this file, it opens here for everyone. Until then, open it in a new tab.' : (kind === 'office' ? 'Older Word and PowerPoint files need Microsoft’s viewer.' : (why ? 'The preview didn’t load (' + why + ').' : 'The preview didn’t load.')) + ' Open it in a new tab to read it without downloading.'),
+      h('p', null, why === 'notsynced' || why === 'nomake' ? 'This file couldn’t be loaded here. Open it in a new tab.' : (kind === 'office' ? 'Older Word and PowerPoint files need Microsoft’s viewer.' : (why ? 'The preview didn’t load (' + why + ').' : 'The preview didn’t load.')) + ' Open it in a new tab to read it without downloading.'),
       h('a', { class: 'btn primary', href: tabUrl(f), target: '_blank', rel: 'noopener' }, icon('open'), 'Open in a new tab')));
   }
   async function fetchBytes(url) {
@@ -2375,7 +2375,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     $('#hello').textContent = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
     const sum = $('#summary');
     const ready = S.loadedAt || S.roster.length;
-    if (!ready) sum.textContent = S.mcp ? 'Loading ' + cohortName() + ' from GoHighLevel…' : 'Live data loads when this page is opened in claude.ai with the Gohighlevel connector added.';
+    if (!ready) sum.textContent = S.mcp ? 'Loading ' + cohortName() + ' from GoHighLevel…' : 'Live data didn’t load. Press Refresh from GoHighLevel.';
     else {
       const q = D.queue, oldest = q.find((x) => x.turnedIn);
       sum.replaceChildren(
@@ -2436,7 +2436,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     $('#inbox-n').textContent = fmtInt(D.queue.length);
     const err = S.err.assess || S.err.won;
     if (err && !S.assess.length) { box.replaceChildren(h('div', { class: 'sect-err' }, err)); return; }
-    if (!S.loadedAt && !S.assess.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading submissions…' : 'Submissions load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (!S.loadedAt && !S.assess.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading submissions…' : 'Submissions didn’t load. Press Refresh from GoHighLevel.')); return; }
     if (!D.queue.length) { S.sel = null; S.sheet = false; syncSheet(); box.replaceChildren(h('div', { class: 'empty' }, 'Nothing waiting on review in ' + cohortName() + '. New homework shows up here as members turn it in.')); return; }
     if (!S.selUser || !D.queue.some((q) => q.rec.id === S.sel)) { S.sel = D.queue[0].rec.id; S.selUser = false; }
     const idx = D.queue.findIndex((q) => q.rec.id === S.sel);
@@ -2510,7 +2510,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 
   function renderFollow() {
     const box = $('#follow');
-    if (!S.roster.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading members…' : 'Members load when this page is opened in claude.ai.')); return; }
+    if (!S.roster.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading members…' : 'Members didn’t load. Press Refresh from GoHighLevel.')); return; }
     if (!D.follow.length) { box.replaceChildren(h('div', { class: 'empty' }, 'Nobody needs a nudge right now.')); return; }
     const shown = D.follow.slice(0, 6);
     box.replaceChildren(
@@ -2524,7 +2524,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 
   function renderActivity() {
     const box = $('#activity');
-    if (!D.events.length) { box.replaceChildren(h('div', { class: 'empty' }, S.loadedAt ? 'No lessons finished yet in ' + cohortName() + '.' : (S.mcp ? 'Loading activity…' : 'Activity loads when this page is opened in claude.ai.'))); return; }
+    if (!D.events.length) { box.replaceChildren(h('div', { class: 'empty' }, S.loadedAt ? 'No lessons finished yet in ' + cohortName() + '.' : (S.mcp ? 'Loading activity…' : 'Activity didn’t load. Press Refresh from GoHighLevel.'))); return; }
     box.replaceChildren(h('ul', { class: 'alist' }, D.events.slice(0, 8).map((ev) => {
       let btn;
       if (ev.kind === 'waiting') {
@@ -2583,7 +2583,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   function renderMembers() {
     const box = $('#members-list');
     if (S.err.won && !S.roster.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.won)); return; }
-    if (!S.roster.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading members…' : 'Members load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (!S.roster.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading members…' : 'Members didn’t load. Press Refresh from GoHighLevel.')); return; }
     if (graderFocused() && box.contains(document.activeElement)) return;
     const q = S.mSearch.trim().toLowerCase();
     let rows = D.members.filter((m) => !q || (m.name + ' ' + m.email).toLowerCase().includes(q));
@@ -2698,7 +2698,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   function renderLessons() {
     const box = $('#lessons-list');
     if (S.err.lessons && !S.course.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.lessons)); return; }
-    if (!S.course.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading lessons…' : 'Lessons load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (!S.course.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading lessons…' : 'Lessons didn’t load. Press Refresh from GoHighLevel.')); return; }
     const st = D.lessonStats;
     const withHw = st.filter((s) => s.passed + s.waiting + s.redo > 0);
     const top = withHw.slice().sort((a, b) => (b.passed + b.waiting + b.redo) - (a.passed + a.waiting + a.redo))[0];
@@ -2727,7 +2727,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   }
   function renderMap() {
     const box = $('#map');
-    if (!S.course.length || !D.members.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading the lesson map…' : 'The map loads when this page is opened in claude.ai.')); return; }
+    if (!S.course.length || !D.members.length) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading the lesson map…' : 'The map didn’t load. Press Refresh from GoHighLevel.')); return; }
     const byCoh = new Map();
     for (const p of D.members) { if (!byCoh.has(p.cohort)) byCoh.set(p.cohort, []); byCoh.get(p.cohort).push(p); }
     const cohorts = [...byCoh.keys()].sort((a, b) => Number(b.slice(1)) - Number(a.slice(1)));
@@ -2788,7 +2788,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   function renderUploads() {
     const box = $('#uploads-list');
     if (S.err.assess && !S.assess.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.assess)); return; }
-    if (!S.assess.length && !S.loadedAt) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading uploads…' : 'Uploads load when this page is opened in claude.ai with GoHighLevel connected.')); return; }
+    if (!S.assess.length && !S.loadedAt) { box.replaceChildren(h('div', { class: 'empty' }, S.mcp ? 'Loading uploads…' : 'Uploads didn’t load. Press Refresh from GoHighLevel.')); return; }
     if (graderFocused() && box.contains(document.activeElement)) return;
     const q = S.uSearch.trim().toLowerCase();
     let rows = D.uploads.filter((u) => (!S.uFilter || u.status === S.uFilter) && (!q || (u.member.name + ' ' + u.lesson.title + ' ' + u.files.map((f) => f.title).join(' ')).toLowerCase().includes(q)));
@@ -3299,7 +3299,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     S.mcp = mcp;
     loadMirror();
     loadAll('first');
-  }, () => { banner('', 'Live GoHighLevel data loads when this page is opened in claude.ai with the Gohighlevel connector added.'); });
+  }, () => { banner('', 'Live GoHighLevel data didn’t load. Press Refresh from GoHighLevel.'); });
 })();
 </script>
 </body></html>
