@@ -774,9 +774,34 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 .ov-gs span { font-size: 12px; color: var(--ink-2); font-weight: 600; }
 .ov-gs b { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
 .ov-gs small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1500px) { #members-list .hide-mid { display: none; } }
+@media (max-width: 1300px) and (min-width: 901px) { #members-list td, #members-list th > button, #members-list th.plain { padding-left: 9px; padding-right: 9px; } #members-list .bar { min-width: 84px; } }
+.ov-row4 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+.ov-gstats4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1500px) { .ov-gstats4 { grid-template-columns: 1fr 1fr; } }
+.ov-note { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: var(--soft); font-size: 12.5px; color: var(--ink-2); }
+.ov-note .ico { width: 15px; height: 15px; color: var(--warn); margin-top: 1px; }
+.ov-mini .sec { margin-bottom: 6px; }
+.ov-plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.ov-prow { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 9px 8px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; color: var(--ink); font: inherit; }
+.ov-prow:hover { background: var(--soft); }
+.ov-prow > .ico { color: var(--muted); width: 16px; height: 16px; }
+.ov-pn { min-width: 0; } .ov-pn b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-pn small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-dnum { text-align: right; } .ov-dnum b { display: block; font-variant-numeric: tabular-nums; } .ov-dnum small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.deals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 900px) { .deals { grid-template-columns: minmax(0, 1fr); } }
+.deal { background: var(--panel); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.deal-h b { display: block; font-weight: 600; } .deal-h small { color: var(--muted); font-size: 12.5px; }
+.deal-n { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.deal-n > div { background: var(--soft); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.deal-n dt { font-size: 11.5px; color: var(--muted); } .deal-n dd { margin: 2px 0 0; font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deal-t { margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.deal-t dt { font-size: 11.5px; color: var(--muted); } .deal-t dd { margin: 1px 0 0; overflow-wrap: anywhere; }
 .ov-gs.warn { background: var(--warn-soft); } .ov-gs.warn b { color: var(--warn); }
 .ov-gs.bad { background: var(--bad-soft); } .ov-gs.bad b { color: var(--bad); }
-@media (max-width: 1180px) { .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-row1, .ov-row2, .ov-row3 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1180px) { .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-row1, .ov-row2, .ov-row3, .ov-row4 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .ov-gstats4 { grid-template-columns: 1fr 1fr; } .deal-n { grid-template-columns: 1fr 1fr; } #members-list td.c-onb { order: 1; } }
 @media (max-width: 640px) {
   .ov-head .tools { width: 100%; } .seg { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); } .seg button { min-height: 36px; }
   .ov-kpis { gap: 10px; } .ov-kpi { padding: 14px; } .ov-val { font-size: 26px; } .ov-spark { width: 56px; right: 12px; top: 14px; }
@@ -855,7 +880,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       </div>
       <div class="ov-row ov-row2">
         <section class="card" aria-labelledby="ov-funnel-h">
-          <div class="chead"><div><h2 id="ov-funnel-h">Program funnel</h2><p>From payment to passed homework</p></div></div>
+          <div class="chead"><div><h2 id="ov-funnel-h">Program funnel</h2><p>From payment to a submitted deal</p></div></div>
           <div class="ov-body" id="ov-funnel"></div>
         </section>
         <section class="card" aria-labelledby="ov-people-h">
@@ -871,6 +896,16 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         <section class="card" aria-labelledby="ov-grading-h">
           <div class="chead"><div><h2 id="ov-grading-h">Grading</h2><p>Homework review at a glance</p></div></div>
           <div class="ov-body" id="ov-grading"></div>
+        </section>
+      </div>
+      <div class="ov-row ov-row4">
+        <section class="card" aria-labelledby="ov-onb-h">
+          <div class="chead"><div><h2 id="ov-onb-h">Onboarding with Jay</h2><p>Legacy Onboarding Calls on the Unshakable Onboarding calendar</p></div></div>
+          <div class="ov-body" id="ov-onb"></div>
+        </section>
+        <section class="card" aria-labelledby="ov-deals-h">
+          <div class="chead"><div><h2 id="ov-deals-h">Deals submitted</h2><p id="ov-deals-sub">Mastermind deal form, newest first</p></div></div>
+          <div class="ov-body" id="ov-deals"></div>
         </section>
       </div>
     </section>
@@ -1015,6 +1050,11 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     pipeline: 'nGIAQVABxlvvZMqqO7pd',
     // Left out at Nick's request: Craig Cooper, Joseph Sanchez (Nov 3 2026); duplicate Roland Ochoa with no email, Pk3HzlFGjZyLtxe9Tw7Q (Nov 4 2026).
     exclude: new Set(['l9TcRfVUZeFMTCdlvilP', 'jVvHyoRHiv5NRUOLffZ6', 'Pk3HzlFGjZyLtxe9Tw7Q']),
+    // Jay's "Unshakable Onboarding Call" calendar, Jay's personal calendar (BTW feedback calls), and the members-only Mastermind deal form.
+    onbCalendar: 'e1kXGGsjy8IIsuoKRGne',
+    jayCalendar: '1nLzSlLeTb4gIoQ7r8ts',
+    dealSurvey: 'krhwlGXwWa2ziE6ciHfu',
+    dealFields: { address: '4QRg3MmaARh5HWR9hJTm', city: '7uTmbYD88xiqcMkB5frp', zip: 'Xaa1aTuxrQVMXi5bhHIq', source: 'G6mpa0IO2IPcguDfNwb9', owner: '5S32uKG5uIrKhIuGlygZ', contacted: 'XQrqDJTvaJ0Tk2T06OFD', why: 'gHOg3e79tcUvOyAayK4w', distress: 'ZwGVHLN3L94zJowZFEOZ', opportunity: 'FK05dxWYbV2gElf1NJCQ', arv: 'D4iNbES2LLSA049fMBa4', arvSource: 'nHuxVSX6JpeuCT8aJmtn', rehab: 's3yPFh9Pqm2XIIC6pOZy', strategy: 'lzJdyS8FDlv0vNSTPoDN', ceiling: '5aPVSSZ60TH97RbvZseF', notes: 'OzQGtIFL0U1D2GMue5Z0' },
     defaultCohort: 'all',
     autoRefreshMs: 5 * 60 * 1000,
     quietDays: 3,
@@ -1023,7 +1063,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   const S = {
     mcp: null, loading: false, loadedAt: null, cohort: CFG.defaultCohort, view: 'overview', sheet: false,
     roster: [], course: [], modules: [], assess: [],
-    rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(),
+    rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(), onb: [], deals: [], onbOk: false, dealsOk: false, extErr: {},
     err: {}, drafts: {}, opened: new Set(), mirror: new Map(), sel: null, openMember: null, openGrade: null,
     mSearch: '', uSearch: '', uFilter: '',
     sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' } },
@@ -1234,6 +1274,27 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     }
     return out;
   }
+  async function loadOnboarding() {
+    const now = Date.now();
+    const q = (cal) => ({ query: { calendarId: cal, startTime: String(now - 300 * 86400000), endTime: String(now + 120 * 86400000) } });
+    const [a, b] = await Promise.all([ghl('get-calendar-events', q(CFG.onbCalendar), 'Onboarding calls on Jay’s calendar'), ghl('get-calendar-events', q(CFG.jayCalendar), 'Feedback calls on Jay’s calendar')]);
+    return [...((a && a.events) || []), ...((b && b.events) || [])].filter((e) => e && !e.deleted && e.contactId)
+      .map((e) => ({ id: e.id, contactId: e.contactId, calendarId: e.calendarId, title: e.title || '', start: e.startTime, status: String(e.appointmentStatus || e.appoinmentStatus || '').toLowerCase() }));
+  }
+  async function loadDeals() {
+    const out = [], F = CFG.dealFields;
+    for (let page = 1; page <= 20; page++) {
+      const d = await ghl('get-surveys-submissions', { query: { surveyId: CFG.dealSurvey, limit: 100, page } }, 'Mastermind deal submissions');
+      const got = (d && d.submissions) || [];
+      for (const sub of got) {
+        const o = sub.others || {};
+        const g = (k) => { const v = o[F[k]]; return Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v)).trim(); };
+        out.push({ id: sub.id, contactId: sub.contactId, email: String(sub.email || '').toLowerCase(), at: sub.createdAt, address: g('address'), city: g('city'), zip: g('zip'), source: g('source'), owner: g('owner'), contacted: g('contacted'), why: g('why'), distress: g('distress'), opportunity: g('opportunity'), arv: g('arv'), arvSource: g('arvSource'), rehab: g('rehab'), strategy: g('strategy'), ceiling: g('ceiling'), notes: g('notes') });
+      }
+      if (!got.length || !(d.meta && d.meta.nextPage)) break;
+    }
+    return out;
+  }
   async function loadWon() {
     const body = { locationId: CFG.location, limit: 100, filters: [{ field: 'pipeline_id', operator: 'eq', value: CFG.pipeline }, { field: 'status', operator: 'eq', value: 'won' }] };
     const list = [];
@@ -1288,7 +1349,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       const db = await getDb();
       if (!db || !S.roster.length || !S.course.length) return;
       if (S.roster.some((r) => !S.times.has(r.contactId))) await loadTimes(S.roster.map((r) => r.contactId));
-      const snap = { v: 1, roster: S.roster, course: S.course, modules: S.modules, assess: S.assess, rollup: [...S.rollup], enroll: [...S.enroll], enrollOk: S.enrollOk,
+      const snap = { v: 1, roster: S.roster, course: S.course, modules: S.modules, assess: S.assess, rollup: [...S.rollup], enroll: [...S.enroll], enrollOk: S.enrollOk, onb: S.onb, deals: S.deals, onbOk: S.onbOk, dealsOk: S.dealsOk,
         times: [...S.times].map(([id, v]) => [id, v === 'none' ? 'none' : [...v]]) };
       const body = JSON.stringify(snap);
       const ver = await sha16(body);
@@ -1337,6 +1398,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       const snap = JSON.parse(json);
       S.roster = snap.roster || []; S.course = snap.course || []; S.modules = snap.modules || []; S.assess = snap.assess || [];
       S.rollup = new Map(snap.rollup || []); S.enroll = new Map(snap.enroll || []); S.enrollOk = !!snap.enrollOk;
+      S.onb = snap.onb || []; S.deals = snap.deals || []; S.onbOk = !!snap.onbOk; S.dealsOk = !!snap.dealsOk;
       S.times = new Map((snap.times || []).map(([id, v]) => [id, v === 'none' ? 'none' : new Map(v)]));
       S.mode = 'snapshot'; S.snapAt = new Date(snap.at || meta.at); S.loadedAt = S.snapAt; S.err = {};
       const when = S.snapAt.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
@@ -1397,9 +1459,16 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (R.rollup) S.rollup = new Map(R.rollup.map((c) => [c.contactId, { done: Number(c.completedLessons) || 0, total: Number(c.totalLessons) || 0 }]));
     if (R.enroll) { S.enroll = new Map(R.enroll.map((e) => [e.contactId, e.createdAt || null])); S.enrollOk = true; }
     S.times = new Map();
+    // Onboarding calls and deal submissions load beside the course data; a miss shows inside their own cards.
+    const extra = Promise.allSettled([loadOnboarding(), loadDeals()]).then(([o, d]) => {
+      S.extErr = {};
+      if (o.status === 'fulfilled') { S.onb = o.value; S.onbOk = true; } else S.extErr.onb = errorText(o.reason);
+      if (d.status === 'fulfilled') { S.deals = d.value; S.dealsOk = true; } else S.extErr.deals = errorText(d.reason);
+    });
     renderAll();
     try { await loadTimes(cohortMembers().map((r) => r.contactId)); }
     catch (e) { if (PAGE_LEVEL.has(e && e.code)) banner('bad', errorText(e)); }
+    await extra;
     if (Object.keys(S.err).length) banner('bad', 'Some data did not load. ' + Object.values(S.err)[0]);
     finishLoad(true);
     if (!Object.keys(S.err).length) saveSnapshot();
@@ -1435,6 +1504,38 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     }
     for (const list of files.values()) list.sort((x, y) => y.attempt - x.attempt);
     const timeOf = (cid, lid) => { const t = S.times.get(cid); return t && t !== 'none' ? (t.get(lid) || null) : null; };
+    const onbBy = new Map(), fbBy = new Map();
+    for (const e of S.onb) {
+      if (!ids.has(e.contactId)) continue;
+      const map = /feedback/i.test(e.title) ? fbBy : (e.calendarId === CFG.onbCalendar ? onbBy : null);
+      if (!map) continue;
+      if (!map.has(e.contactId)) map.set(e.contactId, []);
+      map.get(e.contactId).push(e);
+    }
+    const emailToId = new Map(members.filter((r) => r.email).map((r) => [r.email.toLowerCase(), r.contactId]));
+    const dealsBy = new Map();
+    for (const dl of S.deals) {
+      const cid = ids.has(dl.contactId) ? dl.contactId : emailToId.get(dl.email);
+      if (!cid) continue;
+      if (!dealsBy.has(cid)) dealsBy.set(cid, []);
+      dealsBy.get(cid).push(dl);
+    }
+    for (const list of dealsBy.values()) list.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    const nowMs = Date.now();
+    const onbOf = (list) => {
+      if (!S.onbOk) return { s: 'unknown' };
+      if (!list || !list.length) return { s: 'none' };
+      const t = (e) => new Date(e.start).getTime();
+      const latest = (arr) => arr.reduce((a, b) => (t(b) > t(a) ? b : a));
+      const showed = list.filter((e) => e.status === 'showed');
+      if (showed.length) return { s: 'done', at: latest(showed).start, marked: true };
+      const held = list.filter((e) => e.status === 'confirmed' && t(e) < nowMs);
+      if (held.length) return { s: 'done', at: latest(held).start, marked: false };
+      const up = list.filter((e) => e.status === 'confirmed' && t(e) >= nowMs).sort((a, b) => t(a) - t(b));
+      if (up.length) return { s: 'upcoming', at: up[0].start };
+      const last = latest(list);
+      return { s: 'missed', at: last.start, why: last.status === 'noshow' ? 'No-show' : 'Cancelled' };
+    };
     const byMember = members.map((r) => {
       const roll = S.rollup.get(r.contactId);
       const total = (roll && roll.total) || S.course.length || 14;
@@ -1453,6 +1554,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         waiting: hw.filter((x) => x.rec.status === 'processing').length,
         redo: hw.filter((x) => x.rec.status === 'failed').length,
         files: nFiles, last, login, enrolledAt: S.enroll.get(r.contactId) || null,
+        onb: onbOf(onbBy.get(r.contactId)), feedback: (fbBy.get(r.contactId) || []).filter((e) => e.status !== 'cancelled' && new Date(e.start).getTime() < nowMs).length,
+        deals: dealsBy.get(r.contactId) || [],
       });
     });
     const nameCount = new Map();
@@ -1492,6 +1595,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     for (const m of byMember) {
       let r = null;
       if (m.login === 'no') r = { rank: 0, cls: 'bad', label: 'No course login', note: 'Paid ' + fmtDay(m.wonAt) + ' but has no access to the course' };
+      else if (m.onb.s === 'none' || m.onb.s === 'missed') r = { rank: 1, cls: 'warn', label: m.onb.s === 'none' ? 'No onboarding call' : 'Onboarding ' + m.onb.why.toLowerCase(), note: m.onb.s === 'none' ? 'Nothing booked on Jay’s onboarding calendar' : m.onb.why + ' on ' + fmtDay(m.onb.at) + ', not rebooked' };
       else if (m.redo) r = { rank: 1, cls: 'bad', label: m.redo + ' redo to resubmit', note: 'Sent back for redo, no new try yet' };
       else if (m.hwIn === 0) { const d = daysSince(m.wonAt); r = { rank: 2, cls: 'warn', label: 'No homework yet', note: d != null ? 'Paid ' + d + (d === 1 ? ' day' : ' days') + ' ago' : 'No submissions in the course' }; }
       else { const d = daysSince(m.last); if (d != null && d >= CFG.quietDays) r = { rank: 3, cls: 'none', label: 'Quiet for ' + d + ' days', note: 'Last activity ' + fmtWhen(m.last) }; }
@@ -1533,7 +1637,10 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       uploads.push({ key: a.id, gradeKey: key, member: m, lesson: l, status: a.status, attempt: Number(a.attempt) || 1, files: fl, rec: a, isLatest: !!(lat && lat.rec.id === a.id), turnedIn: timeOf(a.contactId, a.lessonId) });
       for (const f of fl) fileList.push({ title: f.title, url: f.url, member: m, lesson: l });
     }
-    return { members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
+    const deals = [];
+    for (const m of byMember) for (const dl of m.deals) deals.push(Object.assign({ member: m }, dl));
+    deals.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    return { deals, members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
   }
 
   // ---------- grader ----------
@@ -2332,6 +2439,19 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       } }, label));
   }
 
+  function onbPill(o) {
+    if (!o || o.s === 'unknown') return '';
+    const map = { done: ['ok', 'Onboarded'], upcoming: ['none', 'Booked ' + fmtDay(o.at).replace(/, \d{4}$/, '')], missed: ['warn', o.why || 'Missed'], none: ['bad', 'Not booked'] };
+    const [cls, text] = map[o.s];
+    return h('span', { class: 'pill ' + cls, title: o.at ? fmtWhen(o.at) + (o.s === 'done' && !o.marked ? ' · still Confirmed in GoHighLevel' : '') : '' }, text);
+  }
+  const onbText = (o) => !o || o.s === 'unknown' ? '' : o.s === 'done' ? 'Done ' + fmtDay(o.at) + (o.marked ? ' (marked Showed)' : ' (still Confirmed in GoHighLevel)') : o.s === 'upcoming' ? 'Booked for ' + fmtWhen(o.at) : o.s === 'missed' ? o.why + ' ' + fmtDay(o.at) + ', not rebooked' : 'Not booked';
+  function dealCards(list) {
+    return h('div', { class: 'deals' }, list.map((dl) => h('article', { class: 'deal' },
+      h('div', { class: 'deal-h' }, h('b', null, dl.address || 'No address given'), h('small', null, [dl.city, dl.zip].filter(Boolean).join(' ') + ' · submitted ' + fmtWhen(dl.at))),
+      h('dl', { class: 'deal-n' }, ...[['ARV', dl.arv], ['Rehab', dl.rehab], ['Ceiling', dl.ceiling], ['Strategy', dl.strategy]].map(([k, v]) => h('div', null, h('dt', null, k), h('dd', { title: v || '' }, v ? (k === 'Strategy' ? v : moneyish(v)) : '—')))),
+      h('dl', { class: 'deal-t' }, ...[['Found by', dl.source], ['Seller contacted', dl.contacted], ['Distress', dl.distress], ['Why selling', dl.why], ['Opportunity', dl.opportunity], ['ARV source', dl.arvSource], ['Notes', dl.notes]].filter(([, v]) => v).map(([k, v]) => h('div', null, h('dt', null, k), h('dd', null, v)))))));
+  }
   function renderMembers() {
     const box = $('#members-list');
     if (S.err.won && !S.roster.length) { box.replaceChildren(h('div', { class: 'sect-err' }, S.err.won)); return; }
@@ -2339,7 +2459,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (graderFocused() && box.contains(document.activeElement)) return;
     const q = S.mSearch.trim().toLowerCase();
     let rows = D.members.filter((m) => !q || (m.name + ' ' + m.email).toLowerCase().includes(q));
-    rows = sortRows(rows, S.sort.members, { name: (m) => m.name.toLowerCase(), cohort: (m) => Number(m.cohort.slice(1)) * 1000 + m.progress * 100, progress: (m) => m.progress, last: (m) => m.last });
+    rows = sortRows(rows, S.sort.members, { name: (m) => m.name.toLowerCase(), cohort: (m) => Number(m.cohort.slice(1)) * 1000 + m.progress * 100, progress: (m) => m.progress, last: (m) => m.last, onb: (m) => ({ none: 0, missed: 1, upcoming: 2, done: 3 }[m.onb.s] ?? -1), deals: (m) => m.deals.length });
     const allMode = S.cohort === 'all';
     if (!rows.length) { box.replaceChildren(h('div', { class: 'empty' }, 'No members match “' + S.mSearch + '”.')); return; }
     const tbody = h('tbody');
@@ -2352,22 +2472,24 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       tr.append(
         h('td', { class: 'c-person' }, h('div', { class: 'person' }, h('span', { class: 'caret', 'aria-hidden': 'true' }, icon('chev')), avatar(m.name), h('span', { style: 'min-width:0' }, h('b', null, m.name), h('small', null, m.email || 'No email on file', m.dup ? h('span', { class: 'dupflag' }, ' · Duplicate name') : null)))),
         allMode ? h('td', { class: 'c-coh' }, 'C' + m.cohort.slice(1)) : null,
+        h('td', { class: 'c-onb' }, onbPill(m.onb)),
         h('td', { class: 'c-prog', 'data-label': 'lessons' }, h('div', { class: 'bar' }, h('span', { class: 'track' }, h('span', { class: 'fill', style: 'width:' + (m.progress * 100).toFixed(1) + '%' })), h('span', null, m.done + ' / ' + m.total))),
         h('td', { class: 'c-stat r' + (m.hwIn ? '' : ' zero'), 'data-label': 'turned in' }, fmtInt(m.hwIn)),
         h('td', { class: 'c-stat r' + (m.waiting ? ' warnnum' : ' zero'), 'data-label': 'waiting' }, fmtInt(m.waiting)),
         h('td', { class: 'c-stat r' + (m.passed ? ' oknum' : ' zero'), 'data-label': 'passed' }, fmtInt(m.passed)),
         h('td', { class: 'c-stat r' + (m.redo ? ' badnum' : ' zero'), 'data-label': 'redo' }, fmtInt(m.redo)),
-        h('td', { class: 'hide-narrow c-login' + (m.login === 'no' ? ' is-no' : '') }, m.login === 'yes' ? 'Active' : m.login === 'no' ? h('span', { class: 'badnum' }, 'No login') : ''),
-        h('td', { class: 'hide-narrow c-last' }, m.last ? ago(m.last) + ' ago' : ''));
+        h('td', { class: 'c-stat r' + (m.deals.length ? ' oknum' : ' zero'), 'data-label': m.deals.length === 1 ? 'deal' : 'deals' }, fmtInt(m.deals.length)),
+        h('td', { class: 'hide-narrow hide-mid c-login' + (m.login === 'no' ? ' is-no' : '') }, m.login === 'yes' ? 'Active' : m.login === 'no' ? h('span', { class: 'badnum' }, 'No login') : ''),
+        h('td', { class: 'hide-narrow hide-mid c-last' }, m.last ? ago(m.last) + ' ago' : ''));
       tbody.append(tr);
-      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: allMode ? '9' : '8' }, memberPanel(m))));
+      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: allMode ? '11' : '10' }, memberPanel(m))));
     }
     box.replaceChildren(h('table', null,
       h('thead', null, h('tr', null,
-        headCell('members', 'name', 'Member'), allMode ? headCell('members', 'cohort', 'Cohort') : null, headCell('members', 'progress', 'Lessons done'),
+        headCell('members', 'name', 'Member'), allMode ? headCell('members', 'cohort', 'Cohort') : null, headCell('members', 'onb', 'Onboarding'), headCell('members', 'progress', 'Lessons done'),
         headCell('members', 'hwIn', 'Turned in', 'r'), headCell('members', 'waiting', 'Waiting', 'r'),
-        headCell('members', 'passed', 'Passed', 'r'), headCell('members', 'redo', 'Redo', 'r'),
-        h('th', { class: 'plain hide-narrow', scope: 'col' }, 'Course login'), headCell('members', 'last', 'Last activity', 'hide-narrow'))),
+        headCell('members', 'passed', 'Passed', 'r'), headCell('members', 'redo', 'Redo', 'r'), headCell('members', 'deals', 'Deals', 'r'),
+        h('th', { class: 'plain hide-narrow hide-mid', scope: 'col' }, 'Course login'), headCell('members', 'last', 'Last activity', 'hide-narrow hide-mid'))),
       tbody));
   }
   function memberPanel(m) {
@@ -2377,6 +2499,9 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     fact('Course login', m.login === 'yes' ? 'Active since ' + fmtDay(m.enrolledAt) : m.login === 'no' ? 'No course login' : '');
     fact('Lessons done', m.done + ' of ' + m.total + ' (' + fmtPct(m.progress) + ')');
     fact('Homework', m.hwIn + ' of ' + D.assignments.length + ' turned in');
+    fact('Last activity', m.last ? ago(m.last) + ' ago · ' + fmtWhen(m.last) : 'No lessons finished yet');
+    if (S.onbOk) { fact('Onboarding call', onbText(m.onb)); fact('Feedback calls with Jay', m.feedback ? String(m.feedback) : 'None yet'); }
+    if (S.dealsOk) fact('Deals submitted', m.deals.length ? m.deals.length + ' · last ' + fmtDay(m.deals[0].at) : 'None yet');
     const mods = h('div', { class: 'mods' });
     const cp = S.catProg.get(m.contactId);
     if (!cp) mods.append(h('span', { class: 'muted' }, S.mode === 'snapshot' ? 'Module progress shows when GoHighLevel is connected. Lesson progress is above.' : 'Loading module progress…'));
@@ -2403,7 +2528,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         h('td', { class: 'c-b r' }, x ? h('button', { type: 'button', class: 'btn small', onclick: (e) => { e.stopPropagation(); S.openGrade = gradeOpen ? null : key; renderMembers(); } }, gradeOpen ? 'Close' : (x.rec.status === 'processing' ? 'Grade' : 'Regrade')) : '')));
       if (gradeOpen && x) tb.append(h('tr', { class: 'gradebox' }, h('td', { colspan: '6' }, grader(x.rec, { memberName: m.name, lessonShort: l.short, gradeKey: key }))));
     }
-    const panel = h('div', { class: 'dpanel' }, facts, h('h3', { class: 'sec' }, 'Module progress'), mods, h('h3', { class: 'sec' }, 'Assignments'),
+    const panel = h('div', { class: 'dpanel' }, facts, ...(m.deals.length ? [h('h3', { class: 'sec' }, 'Deals submitted (' + m.deals.length + ')'), dealCards(m.deals)] : []), h('h3', { class: 'sec' }, 'Module progress'), mods, h('h3', { class: 'sec' }, 'Assignments'),
       h('div', { class: 'tablebox hwtable' }, h('table', null,
         h('thead', null, h('tr', null, ['Assignment', 'Status', 'Try', 'Turned in', 'Files', ''].map((t, i) => h('th', { class: 'plain' + (i === 2 || i === 5 ? ' r' : '') + (i === 3 ? ' hide-narrow' : ''), scope: 'col' }, t)))), tb)));
     panel.addEventListener('click', (e) => e.stopPropagation());
@@ -2632,6 +2757,14 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       if (i >= 0 && i < nDays) { days[i].n++; days[i].who.add(e.m.contactId); if (e.hw) days[i].hw++; win.lessons++; win.who.add(e.m.contactId); if (e.hw) win.hw++; }
       else if (P && e.ms >= prevStart && e.ms < start) { prev.lessons++; prev.who.add(e.m.contactId); if (e.hw) prev.hw++; }
     }
+    const dealDays = Array.from({ length: nDays }, () => 0);
+    const dealWin = { n: 0, who: new Set() }, dealPrev = { n: 0 };
+    for (const dl of D.deals) {
+      const ms = new Date(dl.at).getTime(); if (isNaN(ms)) continue;
+      const i = dayIdx(ms, start);
+      if (i >= 0 && i < nDays) { dealDays[i]++; dealWin.n++; dealWin.who.add(dl.member.contactId); }
+      else if (P && ms >= prevStart && ms < start) dealPrev.n++;
+    }
     const status = { active: [], stalled: [], notStarted: [], noLogin: [] };
     for (const m of D.members) {
       if (m.login === 'no') status.noLogin.push(m);
@@ -2644,7 +2777,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       if (v.rec.status === 'passed' || v.rec.status === 'failed') { graded++; if (v.rec.status === 'failed') redo++; }
       if (v.rec.status === 'passed' && v.att === 1) firstTry++;
     }
-    return { P, days, win, prev, status, graded, firstTry, redo, nDays, start };
+    return { P, days, win, prev, status, graded, firstTry, redo, nDays, start, dealDays, dealWin, dealPrev };
   }
   function deltaNode(cur, prv, P) {
     if (!P) return h('span', { class: 'ov-delta flat' }, 'All time');
@@ -2686,13 +2819,54 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       tile('Active members', O.win.who.size, (x) => fmtInt(Math.round(x)), 'of ' + fmtInt(D.members.length) + ' finished a lesson, ' + per, deltaNode(O.win.who.size, O.prev.who.size, O.P), spark(last14.map((d) => d.who.size))),
       tile('Lessons finished', O.win.lessons, (x) => fmtInt(Math.round(x)), per, deltaNode(O.win.lessons, O.prev.lessons, O.P), spark(last14.map((d) => d.n))),
       tile('Homework turned in', O.win.hw, (x) => fmtInt(Math.round(x)), per + ' · ' + fmtInt(D.queue.length) + ' waiting on review', deltaNode(O.win.hw, O.prev.hw, O.P), spark(last14.map((d) => d.hw))),
-      tile('First-try pass rate', passRate * 100, (x) => Math.round(x) + '%', O.graded ? fmtInt(O.firstTry) + ' of ' + fmtInt(O.graded) + ' graded passed on try 1' : 'Nothing graded yet', h('span', { class: 'ov-delta flat' }, fmtInt(O.redo) + ' sent back for redo')));
+      S.dealsOk || D.deals.length
+        ? tile('Deals submitted', O.dealWin.n, (x) => fmtInt(Math.round(x)), 'by ' + fmtInt(O.dealWin.who.size) + (O.dealWin.who.size === 1 ? ' member, ' : ' members, ') + per + ' · ' + fmtInt(D.deals.length) + ' all time', deltaNode(O.dealWin.n, O.dealPrev.n, O.P), spark(O.dealDays.slice(-14)))
+        : tile('Deals submitted', 0, () => '—', S.extErr.deals ? 'Deal form didn’t load' : 'Loading the Mastermind deal form…', h('span', { class: 'ov-delta flat' }, S.extErr.deals ? 'See the Deals card below' : '')));
+    S.ovPassRate = passRate;
     renderTrend(O, animate);
     renderDonut(O, animate);
     renderFunnel(animate);
     renderPeople(animate);
     renderStall(animate);
     renderGradingCard(O);
+    renderOnbCard();
+    renderDealsCard(O);
+  }
+  function renderOnbCard() {
+    const box = $('#ov-onb');
+    if (!S.onbOk) { box.replaceChildren(h('p', { class: S.extErr.onb ? 'sect-err' : 'muted' }, S.extErr.onb ? 'Jay’s calendar didn’t load. ' + S.extErr.onb + ' The GoHighLevel key needs the calendars/events.readonly scope.' : 'Loading Jay’s onboarding calendar…')); return; }
+    const ms = D.members, by = (k) => ms.filter((m) => m.onb.s === k);
+    const done = by('done'), up = by('upcoming'), missed = by('missed'), none = by('none');
+    const unmarked = done.filter((m) => !m.onb.marked).length;
+    const stat = (label, list, sub, cls) => h('div', { class: 'ov-gs' + (cls ? ' ' + cls : '') }, h('span', null, label), h('b', null, fmtInt(list.length)), h('small', null, sub));
+    const nudge = [...missed, ...none].slice(0, 5);
+    box.replaceChildren(
+      h('div', { class: 'ov-gstats ov-gstats4' },
+        stat('Done', done, Math.round((done.length / Math.max(1, ms.length)) * 100) + '% of paid members', ''),
+        stat('Booked', up, up.length ? 'next ' + fmtDay(up.map((m) => m.onb.at).sort()[0]) : 'nothing upcoming', ''),
+        stat('Missed', missed, 'cancelled or no-show', missed.length ? 'warn' : ''),
+        stat('Not booked', none, 'no call on the calendar', none.length ? 'bad' : '')),
+      unmarked ? h('p', { class: 'ov-note' }, icon('alert'), h('span', null, fmtInt(unmarked) + ' of the ' + fmtInt(done.length) + ' done calls are past but still say Confirmed in GoHighLevel, so they count as done. Mark them Showed in the calendar to make it exact.')) : null,
+      nudge.length ? h('div', { class: 'ov-mini' }, h('h3', { class: 'sec' }, 'Book these next'), h('ul', { class: 'ov-plist' }, nudge.map((m) => h('li', null, h('button', { type: 'button', class: 'ov-prow', onclick: () => openMember(m.contactId) }, avatar(m.name), h('span', { class: 'ov-pn' }, h('b', null, m.name), h('small', null, m.onb.s === 'none' ? 'Not booked · paid ' + fmtDay(m.wonAt) : m.onb.why + ' ' + fmtDay(m.onb.at))), icon('chev')))))) : null);
+  }
+  function renderDealsCard(O) {
+    const box = $('#ov-deals');
+    if (!S.dealsOk) { box.replaceChildren(h('p', { class: S.extErr.deals ? 'sect-err' : 'muted' }, S.extErr.deals ? 'The Mastermind deal form didn’t load. ' + S.extErr.deals + ' The GoHighLevel key needs the surveys.readonly scope.' : 'Loading the Mastermind deal form…')); return; }
+    const who = new Set(D.deals.map((d) => d.member.contactId)).size;
+    $('#ov-deals-sub').textContent = fmtInt(D.deals.length) + (D.deals.length === 1 ? ' deal' : ' deals') + ' from ' + fmtInt(who) + (who === 1 ? ' member' : ' members') + ' · Mastermind deal form, newest first';
+    if (!D.deals.length) { box.replaceChildren(h('p', { class: 'muted' }, 'No deals submitted yet in ' + cohortName() + '.')); return; }
+    box.replaceChildren(h('ul', { class: 'ov-plist' }, D.deals.slice(0, 6).map((dl) => h('li', null, h('button', { type: 'button', class: 'ov-prow ov-deal', onclick: () => openMember(dl.member.contactId) },
+      avatar(dl.member.name),
+      h('span', { class: 'ov-pn' }, h('b', null, dl.address || 'No address given'), h('small', null, dl.member.name + ' · ' + [dl.city, dl.zip].filter(Boolean).join(' ') + (dl.strategy ? ' · ' + dl.strategy.toLowerCase() : ''))),
+      h('span', { class: 'ov-dnum' }, h('b', null, dl.ceiling ? moneyish(dl.ceiling) : '—'), h('small', null, 'ceiling · ' + ago(dl.at) + ' ago')))))));
+  }
+  // Members type these as free text ("80,200", "$95k", "undetermined"); show numbers as money, leave words as written.
+  function moneyish(v) {
+    const t = String(v).trim();
+    const m = /^\$?\s*([\d,]+(?:\.\d+)?)\s*(k|K)?$/.exec(t);
+    if (!m) return t.length > 18 ? t.slice(0, 17) + '…' : t;
+    const n = Number(m[1].replace(/,/g, '')) * (m[2] ? 1000 : 1);
+    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
   }
   function renderTrend(O, animate) {
     const host = $('#ov-trend');
@@ -2782,10 +2956,12 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const ms = D.members, paid = ms.length;
     const steps = [
       { label: 'Paid members', n: paid },
+      ...(S.onbOk ? [{ label: 'Onboarding call with Jay', n: ms.filter((m) => m.onb.s === 'done').length }] : []),
       { label: 'Logged in to the course', n: ms.filter((m) => m.login !== 'no').length },
       { label: 'Finished a lesson', n: ms.filter((m) => m.done > 0 || m.last).length },
       { label: 'Turned in homework', n: ms.filter((m) => m.hwIn > 0).length },
-      { label: 'Passed homework', n: ms.filter((m) => m.passed > 0).length, accent: true },
+      { label: 'Passed homework', n: ms.filter((m) => m.passed > 0).length, accent: !S.dealsOk },
+      ...(S.dealsOk ? [{ label: 'Submitted a deal', n: ms.filter((m) => m.deals.length > 0).length, accent: true }] : []),
     ];
     $('#ov-funnel').replaceChildren(h('ol', { class: 'ov-funnel' }, steps.map((s, i) => {
       const pct = paid ? s.n / paid : 0;
@@ -2833,7 +3009,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       h('div', { class: 'ov-gstats' },
         stat('Waiting now', fmtInt(D.queue.length), D.queue.length ? 'submissions to review' : 'queue is clear', D.queue.length ? 'warn' : ''),
         stat('Oldest waiting', oldest ? ago(oldest.turnedIn) : '—', oldest ? oldest.member.name : D.queue.length ? 'turn-in times not recorded' : 'nothing waiting', oldest && daysSince(oldest.turnedIn) >= 2 ? 'warn' : ''),
-        stat('Graded', fmtInt(O.graded), fmtInt(O.graded - O.redo) + ' passed · ' + fmtInt(O.redo) + ' redo'),
+        stat('Graded', fmtInt(O.graded), O.graded ? Math.round((O.firstTry / O.graded) * 100) + '% passed on try 1 · ' + fmtInt(O.redo) + ' redo' : 'nothing graded yet'),
         stat('Need a follow-up', fmtInt(D.follow.length), 'members to nudge', D.follow.length ? 'bad' : '')),
       h('button', { type: 'button', class: 'btn primary block', onclick: () => { show('grade', true); window.scrollTo({ top: 0 }); if (isPhone() && D.queue.length) selectQueue(D.queue[0].rec.id); } }, icon('check'), D.queue.length ? 'Grade the ' + D.queue.length + ' waiting' : 'Open the grading queue'));
   }

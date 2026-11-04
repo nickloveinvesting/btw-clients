@@ -20,7 +20,7 @@ for (const part of (Bun.env.DASH_ACCOUNTS || "").split(";")) {
 }
 function samePw(a: string, b: string) { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y); }
 
-type Op = { m: "GET" | "POST" | "PUT"; p: string; v: string; q?: string[]; write?: boolean };
+type Op = { m: "GET" | "POST" | "PUT"; p: string; v: string; q?: string[]; write?: boolean; only?: Record<string, string[]> };
 const C = COURSES_VERSION;
 const OPS: Record<string, Op> = {
   "list-assessments": { m: "GET", p: "/courses/products/{productId}/assessments", v: C, q: ["pageNumber", "pageSize", "status"] },
@@ -32,6 +32,9 @@ const OPS: Record<string, Op> = {
   "list-enrollments": { m: "GET", p: "/courses/products/{productId}/enrollments", v: C, q: ["cursor", "limit"] },
   "list-category-progress": { m: "GET", p: "/courses/products/{productId}/categories/progress", v: C, q: ["contactId"] },
   "search-opportunities-advanced": { m: "POST", p: "/opportunities/search", v: "2021-07-28" },
+  // Jay's onboarding calendar + Jay's personal calendar (feedback calls), and the members-only Mastermind deal form.
+  "get-calendar-events": { m: "GET", p: "/calendars/events", v: "2021-04-15", q: ["calendarId", "startTime", "endTime"], only: { calendarId: ["e1kXGGsjy8IIsuoKRGne", "1nLzSlLeTb4gIoQ7r8ts"] } },
+  "get-surveys-submissions": { m: "GET", p: "/surveys/submissions", v: "2021-07-28", q: ["surveyId", "limit", "page"], only: { surveyId: ["krhwlGXwWa2ziE6ciHfu"] } },
 };
 const ID = /^[A-Za-z0-9-]{1,64}$/;
 
@@ -98,9 +101,10 @@ async function callGhl(op: Op, params: any): Promise<{ ok: boolean; status: numb
     url = url.replace("{assessmentId}", String(path.assessmentId));
   }
   if (path.productId && path.productId !== PRODUCT) return { ok: false, status: 403, message: "Only the Built to Win course is allowed" };
+  for (const [k, allowed] of Object.entries(op.only || {})) if (!allowed.includes(String(params?.query?.[k] ?? ""))) return { ok: false, status: 403, message: k + " not allowed" };
   const qs = new URLSearchParams();
   for (const k of op.q || []) { const v = params?.query?.[k]; if (v !== undefined && v !== null && v !== "") qs.set(k, String(v)); }
-  if (op.p.startsWith("/courses")) qs.set("locationId", LOCATION);
+  if (op.m === "GET" || op.p.startsWith("/courses")) qs.set("locationId", LOCATION);
   let body: string | undefined;
   if (op.p === "/opportunities/search") body = JSON.stringify({ ...(params?.body || {}), locationId: LOCATION });
   if (op.write) {
@@ -114,7 +118,7 @@ async function callGhl(op: Op, params: any): Promise<{ ok: boolean; status: numb
     body,
   });
   let r = await send(op.v);
-  if (r.status === 400 && op.v !== "2021-07-28") {
+  if (r.status === 400 && op.v === "v3") {
     const t = await r.clone().text();
     if (/version/i.test(t)) r = await send("2021-07-28");
   }
