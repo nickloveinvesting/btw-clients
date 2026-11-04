@@ -684,6 +684,111 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   .vhd { padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 10px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Overview: program health. Bond/Revello-style cards, one accent (deep lime) for data, status colors only for member state. */
+:root { --chart: #4D7C0F; --chart-soft: #D3E2B4; --chart-wash: rgba(77, 124, 15, .16); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart: #C9E957; --chart-soft: #3B4A1E; --chart-wash: rgba(201, 233, 87, .16); } }
+:root[data-theme="dark"] { --chart: #C9E957; --chart-soft: #3B4A1E; --chart-wash: rgba(201, 233, 87, .16); }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.seg button { border: 0; background: none; border-radius: 9px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: background-color .15s, color .15s; }
+.seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); }
+.ov-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.ov-kpi { position: relative; background: var(--panel); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
+.ov-kl { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.ov-val { font-size: 32px; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.ov-ks { font-size: 12.5px; color: var(--muted); min-height: 1.45em; }
+.ov-delta { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12.5px; font-weight: 600; }
+.ov-delta .ico { width: 14px; height: 14px; stroke-width: 2.4; }
+.ov-delta.up { color: var(--ok); } .ov-delta.down { color: var(--bad); } .ov-delta.flat { color: var(--muted); font-weight: 500; }
+.ov-spark { position: absolute; right: 16px; top: 18px; width: 84px; height: 28px; overflow: visible; }
+.ov-spark-line { fill: none; stroke: var(--chart); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+.ov-row { display: grid; gap: 14px; }
+.ov-row1 { grid-template-columns: minmax(0, 1fr) 360px; }
+.ov-row2 { grid-template-columns: 380px minmax(0, 1fr); }
+.ov-row3 { grid-template-columns: minmax(0, 1fr) 380px; }
+.ov-big { font-size: 28px; font-weight: 600; letter-spacing: -.03em; line-height: 1; text-align: right; }
+.ov-big small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 4px; }
+.ov-body { padding: 4px 18px 18px; }
+.ov-chart { display: block; overflow: visible; touch-action: pan-y; }
+.ov-grid { stroke: var(--line); stroke-width: 1; }
+.ov-axis { fill: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.ov-line { fill: none; stroke: var(--chart); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+.ov-wash-top { stop-color: var(--chart); stop-opacity: .22; } .ov-wash-bot { stop-color: var(--chart); stop-opacity: 0; }
+.ov-dot { fill: var(--chart); stroke: var(--panel); stroke-width: 2.5; }
+.ov-cross { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
+.ov-anim .ov-area { animation: ov-fade .9s .15s ease-out both; }
+@keyframes ov-fade { from { opacity: 0; } to { opacity: 1; } }
+.ov-tip { position: fixed; z-index: 40; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px 11px; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; max-width: 260px; }
+.ov-tip b { font-size: 13px; }
+/* Donut */
+.ov-donut-wrap { position: relative; width: 168px; height: 168px; margin: 4px auto 14px; }
+.ov-donut { width: 100%; height: 100%; display: block; }
+.ov-donut-track { fill: none; stroke: var(--soft); stroke-width: 20; }
+.ov-arc { fill: none; stroke-width: 20; cursor: default; transition: stroke-width .15s; }
+.ov-arc:hover { stroke-width: 24; }
+.ov-arc.ok { stroke: var(--ok); } .ov-arc.warn { stroke: var(--warn); } .ov-arc.bad { stroke: var(--bad); } .ov-arc.none { stroke: var(--none); }
+.ov-anim .ov-arc { animation: ov-arc .8s cubic-bezier(.3,.7,.2,1) both; }
+@keyframes ov-arc { from { opacity: 0; stroke-width: 6; } to { opacity: 1; stroke-width: 20; } }
+.ov-donut-c { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ov-donut-c b { font-size: 30px; font-weight: 600; letter-spacing: -.03em; line-height: 1; }
+.ov-donut-c span { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.ov-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.ov-legend li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto 38px; align-items: center; gap: 10px; font-size: 13.5px; }
+.ov-legend .sw { width: 10px; height: 10px; border-radius: 50%; }
+.sw.ok { background: var(--ok); } .sw.warn { background: var(--warn); } .sw.bad { background: var(--bad); } .sw.none { background: var(--none); }
+.ov-legend .lg-l small { display: block; color: var(--muted); font-size: 11.5px; }
+.ov-legend b { font-variant-numeric: tabular-nums; }
+.ov-legend .lg-p { color: var(--muted); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+/* Funnel */
+.ov-funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.ov-frow { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; font-weight: 500; margin-bottom: 6px; }
+.ov-frow b { font-variant-numeric: tabular-nums; } .ov-frow b small { color: var(--muted); font-weight: 500; }
+.ov-ftrack { display: block; height: 26px; border-radius: 8px; background: var(--soft); overflow: hidden; }
+.ov-ffill { display: block; height: 100%; width: var(--w); border-radius: 8px; background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 88%, white), var(--ink)); }
+.ov-trendwrap { flex: 1; }
+.ov-ffill.accent { background: linear-gradient(180deg, color-mix(in srgb, var(--lime) 80%, white), var(--lime)); }
+.ov-anim .ov-ffill { animation: ov-grow-x .9s cubic-bezier(.3,.7,.2,1) both; }
+@keyframes ov-grow-x { from { width: 0; } }
+.ov-fconv { display: block; margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+/* Columns */
+.ov-row > .card { display: flex; flex-direction: column; }
+.ov-row > .card > .ov-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.ov-cols { display: flex; align-items: stretch; gap: 6px; flex: 1; min-height: 220px; }
+.ov-colwrap { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; padding: 4px 0; border-radius: 10px; cursor: pointer; color: var(--ink); font: inherit; }
+.ov-colwrap:hover { background: var(--soft); }
+.ov-colwrap.static { cursor: default; }
+.ov-colv { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ov-colbox { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; }
+.ov-col { display: block; width: min(30px, 70%); height: max(calc(var(--h) * .82), 4px); border-radius: 8px 8px 4px 4px; background: var(--chart-soft); transform-origin: bottom; }
+.ov-col.lead { background: var(--chart); }
+.ov-col.drop { background: var(--warn); }
+.ov-anim .ov-col { animation: ov-grow-y .8s cubic-bezier(.3,.7,.2,1) both; }
+@keyframes ov-grow-y { from { transform: scaleY(0); } }
+.ov-colwrap .av { width: 28px; height: 28px; font-size: 11px; }
+.ov-coln { font-size: 11.5px; color: var(--ink-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-stallcols .ov-col { background: var(--chart); }
+.ov-stallcols .ov-col.drop { background: var(--warn); }
+/* Grading */
+.ov-gstats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.ov-gs { padding: 12px; border-radius: 12px; background: var(--soft); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ov-gs span { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+.ov-gs b { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+.ov-gs small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-gs.warn { background: var(--warn-soft); } .ov-gs.warn b { color: var(--warn); }
+.ov-gs.bad { background: var(--bad-soft); } .ov-gs.bad b { color: var(--bad); }
+@media (max-width: 1180px) { .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-row1, .ov-row2, .ov-row3 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .ov-head .tools { width: 100%; } .seg { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); } .seg button { min-height: 36px; }
+  .ov-kpis { gap: 10px; } .ov-kpi { padding: 14px; } .ov-val { font-size: 26px; } .ov-spark { width: 56px; right: 12px; top: 14px; }
+  .ov-ks { font-size: 12px; } .ov-delta { font-size: 11.5px; }
+  .ov-body { padding: 4px 14px 14px; }
+  .ov-cols { min-height: 190px; gap: 3px; }
+  .ov-colwrap .av { display: none; }
+  .navgroup.views { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  .nav { font-size: 10.5px !important; }
+  .nl-long { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ov-anim * { animation: none !important; } }
 </style>
 
 </head><body><div class="shell">
@@ -694,7 +799,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     </div>
     <nav class="navgroup views" aria-label="Views">
       <p class="glabel">Workspace</p>
-      <a class="nav" href="#grade" data-view="grade" id="nav-grade"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Grading queue<span class="ncount" id="n-grade">0</span></a>
+      <a class="nav" href="#overview" data-view="overview" id="nav-overview"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>Overview</a>
+      <a class="nav" href="#grade" data-view="grade" id="nav-grade"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Grading<span class="nl-long"> queue</span></span><span class="ncount" id="n-grade">0</span></a>
       <a class="nav" href="#members" data-view="members" id="nav-members"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Members<span class="ncount" id="n-members">0</span></a>
       <a class="nav" href="#lessons" data-view="lessons" id="nav-lessons"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Lessons<span class="ncount" id="n-lessons">0</span></a>
       <a class="nav" href="#uploads" data-view="uploads" id="nav-uploads"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Uploads<span class="ncount" id="n-uploads">0</span></a>
@@ -722,7 +828,54 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 
     <div class="banner" id="banner" role="status" hidden></div>
 
-    <section class="view" id="view-grade" aria-labelledby="hello">
+    <section class="view" id="view-overview" aria-labelledby="ov-h" hidden>
+      <div class="vhead ov-head">
+        <div>
+          <h1 id="ov-h">Program overview</h1>
+          <p id="ov-sub">Loading…</p>
+        </div>
+        <div class="tools">
+          <div class="seg" role="group" aria-label="Period" id="ov-period">
+            <button type="button" data-p="7" aria-pressed="false">7 days</button>
+            <button type="button" data-p="30" aria-pressed="true">30 days</button>
+            <button type="button" data-p="0" aria-pressed="false">All time</button>
+          </div>
+        </div>
+      </div>
+      <div class="ov-kpis" id="ov-kpis" aria-label="Program totals"></div>
+      <div class="ov-row ov-row1">
+        <section class="card" aria-labelledby="ov-trend-h">
+          <div class="chead"><div><h2 id="ov-trend-h">Learning activity</h2><p id="ov-trend-sub">Lessons finished per day</p></div><div class="ov-big"><span id="ov-trend-total">0</span><small>lessons in period</small></div></div>
+          <div class="ov-body" id="ov-trend"></div>
+        </section>
+        <section class="card" aria-labelledby="ov-status-h">
+          <div class="chead"><div><h2 id="ov-status-h">Member status</h2><p>Where every paid member stands right now</p></div></div>
+          <div class="ov-body" id="ov-donut"></div>
+        </section>
+      </div>
+      <div class="ov-row ov-row2">
+        <section class="card" aria-labelledby="ov-funnel-h">
+          <div class="chead"><div><h2 id="ov-funnel-h">Program funnel</h2><p>From payment to passed homework</p></div></div>
+          <div class="ov-body" id="ov-funnel"></div>
+        </section>
+        <section class="card" aria-labelledby="ov-people-h">
+          <div class="chead"><div><h2 id="ov-people-h">Progress by member</h2><p id="ov-people-sub">Lessons finished</p></div></div>
+          <div class="ov-body" id="ov-people"></div>
+        </section>
+      </div>
+      <div class="ov-row ov-row3">
+        <section class="card" aria-labelledby="ov-stall-h">
+          <div class="chead"><div><h2 id="ov-stall-h">Where members stall</h2><p id="ov-stall-sub">Members who finished each lesson</p></div></div>
+          <div class="ov-body" id="ov-stall"></div>
+        </section>
+        <section class="card" aria-labelledby="ov-grading-h">
+          <div class="chead"><div><h2 id="ov-grading-h">Grading</h2><p>Homework review at a glance</p></div></div>
+          <div class="ov-body" id="ov-grading"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="view-grade" aria-labelledby="hello" hidden>
       <div class="greet">
         <div class="greet-text">
           <h1 id="hello">Hello</h1>
@@ -868,7 +1021,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   };
 
   const S = {
-    mcp: null, loading: false, loadedAt: null, cohort: CFG.defaultCohort, view: 'grade', sheet: false,
+    mcp: null, loading: false, loadedAt: null, cohort: CFG.defaultCohort, view: 'overview', sheet: false,
     roster: [], course: [], modules: [], assess: [],
     rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(),
     err: {}, drafts: {}, opened: new Set(), mirror: new Map(), sel: null, openMember: null, openGrade: null,
@@ -909,6 +1062,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
     left: '<path d="m15 18-6-6 6-6"/>',
     right: '<path d="m9 18 6-6-6-6"/>',
+    trendUp: '<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+    trendDown: '<path d="M7 7l10 10"/><path d="M17 7v10H7"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
   };
   const phoneMQ = window.matchMedia('(max-width: 640px)');
@@ -1959,6 +2114,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     renderMembers();
     renderLessons();
     renderUploads();
+    renderOverview();
   }
   function renderShell() {
     const counts = new Map();
@@ -2418,10 +2574,275 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     box.hidden = false;
   }
 
+  // ---------- overview ----------
+  // Program health for the selected cohort and period. Built from the same GoHighLevel data as the other tabs:
+  // lesson completion times per member, homework status, course logins.
+  const DAYMS = 86400000;
+  S.ovPeriod = 30; S.ovAnimKey = '';
+  const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dayStart = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const dayIdx = (ms, start) => Math.round((dayStart(ms) - start) / DAYMS);
+  const fmtShort = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs || {}) if (attrs[k] != null) e.setAttribute(k, attrs[k]); return e; };
+  const ovTip = (() => { let t = null; return {
+    show(x, y, nodes) { if (!t) { t = h('div', { class: 'ov-tip', role: 'tooltip' }); document.body.append(t); } t.replaceChildren(...nodes); t.hidden = false;
+      const r = t.getBoundingClientRect(); let left = x + 14, top = y - r.height - 12;
+      if (left + r.width > innerWidth - 8) left = x - r.width - 14; if (left < 8) left = 8; if (top < 8) top = y + 16;
+      t.style.left = left + 'px'; t.style.top = top + 'px'; },
+    hide() { if (t) t.hidden = true; } }; })();
+  function niceMax(v) { if (v <= 4) return 4; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
+  function monotonePath(pts) {
+    const n = pts.length; if (n < 2) return pts.length ? 'M' + pts[0][0] + ',' + pts[0][1] : '';
+    const dx = [], s = [], m = [];
+    for (let i = 0; i < n - 1; i++) { dx[i] = pts[i + 1][0] - pts[i][0]; s[i] = (pts[i + 1][1] - pts[i][1]) / dx[i]; }
+    m[0] = s[0]; m[n - 1] = s[n - 2];
+    for (let i = 1; i < n - 1; i++) m[i] = s[i - 1] * s[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / s[i - 1] + (dx[i] + 2 * dx[i - 1]) / s[i]);
+    let d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
+    for (let i = 0; i < n - 1; i++) {
+      const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], h3 = dx[i] / 3;
+      d += 'C' + (x0 + h3).toFixed(1) + ',' + (y0 + m[i] * h3).toFixed(1) + ' ' + (x1 - h3).toFixed(1) + ',' + (y1 - m[i + 1] * h3).toFixed(1) + ' ' + x1.toFixed(1) + ',' + y1.toFixed(1);
+    }
+    return d;
+  }
+  function countUp(el, to, fmt, animate) {
+    if (!animate || reduceMotion() || !isFinite(to)) { el.textContent = fmt(to); return; }
+    const t0 = performance.now(), dur = 700;
+    const step = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(to * e); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  function ovData() {
+    const P = S.ovPeriod;
+    const evs = [];
+    for (const m of D.members) {
+      const t = S.times.get(m.contactId);
+      if (!t || t === 'none') continue;
+      for (const [lid, at] of t) { if (!at) continue; const ms = new Date(at).getTime(); if (!isNaN(ms)) evs.push({ ms, m, lid, hw: D.latest.has(m.contactId + '|' + lid) }); }
+    }
+    const today = dayStart(Date.now());
+    let first = today;
+    for (const e of evs) if (e.ms < first) first = dayStart(e.ms);
+    const nDays = P || Math.max(14, dayIdx(today, first) + 1);
+    const start = today - (nDays - 1) * DAYMS;
+    const days = Array.from({ length: nDays }, (_, i) => ({ t: start + i * DAYMS, n: 0, hw: 0, who: new Set() }));
+    const win = { lessons: 0, hw: 0, who: new Set() }, prev = { lessons: 0, hw: 0, who: new Set() };
+    const prevStart = start - nDays * DAYMS;
+    for (const e of evs) {
+      const i = dayIdx(e.ms, start);
+      if (i >= 0 && i < nDays) { days[i].n++; days[i].who.add(e.m.contactId); if (e.hw) days[i].hw++; win.lessons++; win.who.add(e.m.contactId); if (e.hw) win.hw++; }
+      else if (P && e.ms >= prevStart && e.ms < start) { prev.lessons++; prev.who.add(e.m.contactId); if (e.hw) prev.hw++; }
+    }
+    const status = { active: [], stalled: [], notStarted: [], noLogin: [] };
+    for (const m of D.members) {
+      if (m.login === 'no') status.noLogin.push(m);
+      else if (!m.done && !m.last) status.notStarted.push(m);
+      else if (m.last && daysSince(m.last) <= 7) status.active.push(m);
+      else status.stalled.push(m);
+    }
+    let graded = 0, firstTry = 0, redo = 0;
+    for (const v of D.latest.values()) {
+      if (v.rec.status === 'passed' || v.rec.status === 'failed') { graded++; if (v.rec.status === 'failed') redo++; }
+      if (v.rec.status === 'passed' && v.att === 1) firstTry++;
+    }
+    return { P, days, win, prev, status, graded, firstTry, redo, nDays, start };
+  }
+  function deltaNode(cur, prv, P) {
+    if (!P) return h('span', { class: 'ov-delta flat' }, 'All time');
+    const d = cur - prv;
+    if (!d) return h('span', { class: 'ov-delta flat' }, 'Same as the ' + P + ' days before');
+    return h('span', { class: 'ov-delta ' + (d > 0 ? 'up' : 'down') }, icon(d > 0 ? 'trendUp' : 'trendDown'), (d > 0 ? '+' : '−') + fmtInt(Math.abs(d)) + ' vs the ' + P + ' days before');
+  }
+  function renderOverview() {
+    const box = $('#view-overview');
+    if (!box || box.hidden || !D) return;
+    const ready = (S.loadedAt || S.roster.length) && S.course.length;
+    $('#ov-sub').textContent = ready
+      ? cohortName().replace(/^./, (c) => c.toUpperCase()) + ' · ' + fmtInt(D.members.length) + ' paid members · ' + fmtInt(S.course.length) + ' lessons' + (S.loadedAt ? ' · updated ' + S.loadedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '')
+      : (S.mcp ? 'Loading ' + cohortName() + ' from GoHighLevel…' : 'Data loads once GoHighLevel is connected.');
+    for (const b of document.querySelectorAll('#ov-period button')) b.setAttribute('aria-pressed', String(Number(b.dataset.p) === S.ovPeriod));
+    if (!ready) return;
+    const O = ovData();
+    const key = S.cohort + '|' + S.ovPeriod + '|' + D.members.length;
+    const animate = key !== S.ovAnimKey;
+    S.ovAnimKey = key;
+    box.classList.toggle('ov-anim', animate && !reduceMotion());
+    const per = O.P ? 'last ' + O.P + ' days' : 'all time';
+    // KPI tiles
+    const tile = (label, val, fmt, sub, delta, trend) => {
+      const v = h('div', { class: 'ov-val' });
+      countUp(v, val, fmt, animate);
+      return h('article', { class: 'ov-kpi' }, h('div', { class: 'ov-kl' }, label), v, h('div', { class: 'ov-ks' }, sub), delta, trend || null);
+    };
+    const spark = (vals) => {
+      const w = 120, hh = 28, mx = Math.max(1, ...vals), n = vals.length;
+      const s = svgEl('svg', { viewBox: '0 0 ' + w + ' ' + hh, class: 'ov-spark', 'aria-hidden': 'true', preserveAspectRatio: 'none' });
+      const pts = vals.map((v, i) => [n > 1 ? (i / (n - 1)) * w : w / 2, hh - 2 - (v / mx) * (hh - 6)]);
+      s.append(svgEl('path', { d: monotonePath(pts), class: 'ov-spark-line' }));
+      return s;
+    };
+    const last14 = O.days.slice(-14);
+    const passRate = O.graded ? O.firstTry / O.graded : 0;
+    $('#ov-kpis').replaceChildren(
+      tile('Active members', O.win.who.size, (x) => fmtInt(Math.round(x)), 'of ' + fmtInt(D.members.length) + ' finished a lesson, ' + per, deltaNode(O.win.who.size, O.prev.who.size, O.P), spark(last14.map((d) => d.who.size))),
+      tile('Lessons finished', O.win.lessons, (x) => fmtInt(Math.round(x)), per, deltaNode(O.win.lessons, O.prev.lessons, O.P), spark(last14.map((d) => d.n))),
+      tile('Homework turned in', O.win.hw, (x) => fmtInt(Math.round(x)), per + ' · ' + fmtInt(D.queue.length) + ' waiting on review', deltaNode(O.win.hw, O.prev.hw, O.P), spark(last14.map((d) => d.hw))),
+      tile('First-try pass rate', passRate * 100, (x) => Math.round(x) + '%', O.graded ? fmtInt(O.firstTry) + ' of ' + fmtInt(O.graded) + ' graded passed on try 1' : 'Nothing graded yet', h('span', { class: 'ov-delta flat' }, fmtInt(O.redo) + ' sent back for redo')));
+    renderTrend(O, animate);
+    renderDonut(O, animate);
+    renderFunnel(animate);
+    renderPeople(animate);
+    renderStall(animate);
+    renderGradingCard(O);
+  }
+  function renderTrend(O, animate) {
+    const host = $('#ov-trend');
+    const total = O.days.reduce((t, d) => t + d.n, 0);
+    $('#ov-trend-total').textContent = fmtInt(total);
+    $('#ov-trend-sub').textContent = 'Lessons finished per day, ' + (O.P ? 'last ' + O.P + ' days' : 'since the first lesson');
+    const avail = host.clientHeight - 8;
+    const W = Math.max(280, host.clientWidth), H = W < 520 ? 200 : Math.max(240, Math.min(380, avail || 260)), padL = 34, padR = 12, padT = 14, padB = 26;
+    const mx = niceMax(Math.max(...O.days.map((d) => d.n), 1));
+    const x = (i) => padL + (O.days.length > 1 ? (i / (O.days.length - 1)) * (W - padL - padR) : (W - padL - padR) / 2);
+    const y = (v) => padT + (1 - v / mx) * (H - padT - padB);
+    const svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, class: 'ov-chart', role: 'img', 'aria-label': 'Lessons finished per day. ' + total + ' in this period.' });
+    const defs = svgEl('defs');
+    const g = svgEl('linearGradient', { id: 'ovwash', x1: 0, y1: 0, x2: 0, y2: 1 });
+    g.append(svgEl('stop', { offset: '0%', class: 'ov-wash-top' }), svgEl('stop', { offset: '100%', class: 'ov-wash-bot' }));
+    defs.append(g); svg.append(defs);
+    for (let k = 0; k <= 4; k++) {
+      const v = (mx / 4) * k, yy = y(v);
+      svg.append(svgEl('line', { x1: padL, x2: W - padR, y1: yy, y2: yy, class: 'ov-grid' }));
+      const t = svgEl('text', { x: padL - 8, y: yy + 4, class: 'ov-axis', 'text-anchor': 'end' }); t.textContent = fmtInt(v); svg.append(t);
+    }
+    const ticks = Math.min(O.days.length, W < 520 ? 4 : 7);
+    for (let k = 0; k < ticks; k++) {
+      const i = Math.round((k / Math.max(1, ticks - 1)) * (O.days.length - 1));
+      const t = svgEl('text', { x: x(i), y: H - 6, class: 'ov-axis', 'text-anchor': k === 0 ? 'start' : k === ticks - 1 ? 'end' : 'middle' }); t.textContent = fmtShort(O.days[i].t); svg.append(t);
+    }
+    const pts = O.days.map((d, i) => [x(i), y(d.n)]);
+    const line = monotonePath(pts);
+    svg.append(svgEl('path', { d: line + 'L' + x(O.days.length - 1) + ',' + y(0) + 'L' + x(0) + ',' + y(0) + 'Z', fill: 'url(#ovwash)', class: 'ov-area' }));
+    const path = svgEl('path', { d: line, class: 'ov-line' });
+    svg.append(path);
+    const lastI = O.days.length - 1;
+    svg.append(svgEl('circle', { cx: x(lastI), cy: y(O.days[lastI].n), r: 4.5, class: 'ov-dot' }));
+    const cross = svgEl('line', { y1: padT, y2: H - padB, class: 'ov-cross', visibility: 'hidden' });
+    const hov = svgEl('circle', { r: 5, class: 'ov-dot', visibility: 'hidden' });
+    svg.append(cross, hov);
+    const hit = svgEl('rect', { x: padL, y: 0, width: W - padL - padR, height: H, fill: 'transparent' });
+    const move = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = ev.clientX - r.left;
+      const i = Math.max(0, Math.min(lastI, Math.round(((px - padL) / (W - padL - padR)) * lastI)));
+      const d = O.days[i];
+      cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+      hov.setAttribute('cx', x(i)); hov.setAttribute('cy', y(d.n)); hov.setAttribute('visibility', 'visible');
+      ovTip.show(ev.clientX, ev.clientY, [h('b', null, new Date(d.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })),
+        h('span', null, fmtInt(d.n) + (d.n === 1 ? ' lesson' : ' lessons') + ' finished'), h('span', { class: 'muted' }, fmtInt(d.who.size) + (d.who.size === 1 ? ' member' : ' members') + ' · ' + fmtInt(d.hw) + ' homework')]);
+    };
+    hit.addEventListener('pointermove', move); hit.addEventListener('pointerdown', move);
+    hit.addEventListener('pointerleave', () => { cross.setAttribute('visibility', 'hidden'); hov.setAttribute('visibility', 'hidden'); ovTip.hide(); });
+    svg.append(hit);
+    host.replaceChildren(svg);
+    if (animate && !reduceMotion()) {
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+      path.getBoundingClientRect();
+      path.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.3,.7,.2,1)';
+      path.style.strokeDashoffset = '0';
+    }
+  }
+  function renderDonut(O, animate) {
+    const segs = [
+      { k: 'active', label: 'Active', note: 'finished a lesson in the last 7 days', cls: 'ok', list: O.status.active },
+      { k: 'stalled', label: 'Stalled', note: 'started, nothing in 7+ days', cls: 'warn', list: O.status.stalled },
+      { k: 'notStarted', label: 'Not started', note: 'no lessons finished yet', cls: 'none', list: O.status.notStarted },
+      { k: 'noLogin', label: 'No course login', note: 'paid, but no access to the course', cls: 'bad', list: O.status.noLogin },
+    ];
+    const total = Math.max(1, D.members.length), size = 168, r = 64, c = 2 * Math.PI * r, gap = segs.filter((s) => s.list.length).length > 1 ? 3 : 0;
+    const svg = svgEl('svg', { viewBox: '0 0 ' + size + ' ' + size, class: 'ov-donut', role: 'img', 'aria-label': segs.map((s) => s.label + ' ' + s.list.length).join(', ') });
+    svg.append(svgEl('circle', { cx: size / 2, cy: size / 2, r, class: 'ov-donut-track' }));
+    let off = 0;
+    segs.forEach((s, i) => {
+      if (!s.list.length) return;
+      const len = (s.list.length / total) * c;
+      const arc = svgEl('circle', { cx: size / 2, cy: size / 2, r, class: 'ov-arc ' + s.cls, 'stroke-dasharray': Math.max(0.01, len - gap) + ' ' + c, 'stroke-dashoffset': -off, transform: 'rotate(-90 ' + size / 2 + ' ' + size / 2 + ')', style: animate && !reduceMotion() ? 'animation-delay:' + i * 90 + 'ms' : null });
+      arc.addEventListener('pointermove', (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, s.label + ': ' + s.list.length), h('span', { class: 'muted' }, s.note), h('span', null, s.list.slice(0, 4).map((m) => m.name).join(', ') + (s.list.length > 4 ? ' +' + (s.list.length - 4) + ' more' : ''))]));
+      arc.addEventListener('pointerleave', () => ovTip.hide());
+      svg.append(arc);
+      off += len;
+    });
+    const act = O.status.active.length;
+    const center = h('div', { class: 'ov-donut-c' }, h('b', null, fmtInt(act)), h('span', null, 'active of ' + fmtInt(D.members.length)));
+    const legend = h('ul', { class: 'ov-legend' }, segs.map((s) => h('li', null,
+      h('span', { class: 'sw ' + s.cls, 'aria-hidden': 'true' }), h('span', { class: 'lg-l' }, s.label, h('small', null, s.note)), h('b', null, fmtInt(s.list.length)), h('span', { class: 'lg-p' }, Math.round((s.list.length / total) * 100) + '%'))));
+    $('#ov-donut').replaceChildren(h('div', { class: 'ov-donut-wrap' }, svg, center), legend);
+  }
+  function renderFunnel(animate) {
+    const ms = D.members, paid = ms.length;
+    const steps = [
+      { label: 'Paid members', n: paid },
+      { label: 'Logged in to the course', n: ms.filter((m) => m.login !== 'no').length },
+      { label: 'Finished a lesson', n: ms.filter((m) => m.done > 0 || m.last).length },
+      { label: 'Turned in homework', n: ms.filter((m) => m.hwIn > 0).length },
+      { label: 'Passed homework', n: ms.filter((m) => m.passed > 0).length, accent: true },
+    ];
+    $('#ov-funnel').replaceChildren(h('ol', { class: 'ov-funnel' }, steps.map((s, i) => {
+      const pct = paid ? s.n / paid : 0;
+      const fill = h('span', { class: 'ov-ffill' + (s.accent ? ' accent' : ''), style: '--w:' + (pct * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 80 + 'ms' : '') });
+      const conv = i ? (steps[i - 1].n ? Math.round((s.n / steps[i - 1].n) * 100) + '% of the step above' : '') : '';
+      return h('li', null, h('div', { class: 'ov-frow' }, h('span', null, s.label), h('b', null, fmtInt(s.n), h('small', null, ' · ' + Math.round(pct * 100) + '%'))), h('span', { class: 'ov-ftrack' }, fill), conv ? h('small', { class: 'ov-fconv' }, conv) : null);
+    })));
+  }
+  function renderPeople(animate) {
+    const host = $('#ov-people');
+    const list = D.members.slice().sort((a, b) => b.done - a.done || b.hwIn - a.hwIn || a.name.localeCompare(b.name));
+    const narrow = host.clientWidth < 560;
+    const top = list.slice(0, narrow ? 8 : 12);
+    const mx = Math.max(1, ...top.map((m) => m.done));
+    $('#ov-people-sub').textContent = top.length < list.length ? 'Top ' + top.length + ' of ' + list.length + ' by lessons finished' : 'Lessons finished, most first';
+    host.replaceChildren(h('div', { class: 'ov-cols' }, top.map((m, i) => {
+      const bar = h('span', { class: 'ov-col' + (m.done && m.done === mx ? ' lead' : ''), style: '--h:' + ((m.done / mx) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 45 + 'ms' : '') });
+      const b = h('button', { type: 'button', class: 'ov-colwrap', 'aria-label': m.name + ': ' + m.done + ' of ' + m.total + ' lessons, ' + m.hwIn + ' homework turned in. Open member.' },
+        h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, m.done + '/' + m.total), bar), avatar(m.name), h('span', { class: 'ov-coln' }, firstName(m.name)));
+      b.addEventListener('click', () => openMember(m.contactId));
+      b.addEventListener('pointermove', (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, m.name), h('span', null, m.done + ' of ' + m.total + ' lessons · ' + m.hwIn + ' homework'), h('span', { class: 'muted' }, 'Cohort ' + m.cohort.slice(1) + (m.last ? ' · last active ' + ago(m.last) + ' ago' : ''))]));
+      b.addEventListener('pointerleave', () => ovTip.hide());
+      return b;
+    })));
+  }
+  function renderStall(animate) {
+    const host = $('#ov-stall');
+    const counts = D.doneByLesson, n = counts.length, total = Math.max(1, D.members.length), top = Math.max(1, ...counts);
+    let dropI = -1, drop = 0;
+    for (let i = 1; i < n; i++) { const d = counts[i - 1] - counts[i]; if (d > drop) { drop = d; dropI = i; } }
+    $('#ov-stall-sub').replaceChildren(dropI > 0 ? h('span', null, 'Lessons in course order. Biggest drop: ', h('b', null, 'lesson ' + (dropI + 1) + ', ' + S.course[dropI].short), ' (' + drop + ' fewer than the lesson before)') : 'Members who finished each lesson, in course order');
+    host.replaceChildren(h('div', { class: 'ov-cols ov-stallcols' }, S.course.map((l, i) => {
+      const bar = h('span', { class: 'ov-col' + (i === dropI ? ' drop' : ''), style: '--h:' + ((counts[i] / top) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 35 + 'ms' : '') });
+      const w = h('div', { class: 'ov-colwrap static', tabindex: '0', 'aria-label': l.title + ': ' + counts[i] + ' of ' + total + ' members finished' },
+        h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, String(counts[i])), bar), h('span', { class: 'ov-coln' }, String(i + 1)));
+      const tip = (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, l.short), h('span', null, counts[i] + ' of ' + total + ' members finished'), h('span', { class: 'muted' }, l.module || '')]);
+      w.addEventListener('pointermove', tip); w.addEventListener('pointerleave', () => ovTip.hide());
+      return w;
+    })));
+  }
+  function renderGradingCard(O) {
+    const oldest = D.queue.find((q) => q.turnedIn);
+    const stat = (label, val, sub, cls) => h('div', { class: 'ov-gs' + (cls ? ' ' + cls : '') }, h('span', null, label), h('b', null, val), h('small', null, sub));
+    $('#ov-grading').replaceChildren(
+      h('div', { class: 'ov-gstats' },
+        stat('Waiting now', fmtInt(D.queue.length), D.queue.length ? 'submissions to review' : 'queue is clear', D.queue.length ? 'warn' : ''),
+        stat('Oldest waiting', oldest ? ago(oldest.turnedIn) : '—', oldest ? oldest.member.name : 'nothing waiting', oldest && daysSince(oldest.turnedIn) >= 2 ? 'warn' : ''),
+        stat('Graded', fmtInt(O.graded), fmtInt(O.graded - O.redo) + ' passed · ' + fmtInt(O.redo) + ' redo'),
+        stat('Need a follow-up', fmtInt(D.follow.length), 'members to nudge', D.follow.length ? 'bad' : '')),
+      h('button', { type: 'button', class: 'btn primary block', onclick: () => { show('grade', true); window.scrollTo({ top: 0 }); if (isPhone() && D.queue.length) selectQueue(D.queue[0].rec.id); } }, icon('check'), D.queue.length ? 'Grade the ' + D.queue.length + ' waiting' : 'Open the grading queue'));
+  }
+  for (const b of document.querySelectorAll('#ov-period button')) b.addEventListener('click', () => { S.ovPeriod = Number(b.dataset.p); renderOverview(); });
+  if (window.ResizeObserver) { let rt = 0, lastW = 0; new ResizeObserver((es) => { const w = Math.round(es[0].contentRect.width); if (Math.abs(w - lastW) < 8) return; lastW = w; clearTimeout(rt); rt = setTimeout(() => { const k = S.ovAnimKey; renderOverview(); S.ovAnimKey = k; }, 120); }).observe($('#view-overview')); }
+
   // ---------- views & controls ----------
-  const VIEWS = ['grade', 'members', 'lessons', 'uploads'];
+  const VIEWS = ['overview', 'grade', 'members', 'lessons', 'uploads'];
   function show(view, push) {
-    if (!VIEWS.includes(view)) view = 'grade';
+    if (!VIEWS.includes(view)) view = 'overview';
     S.view = view;
     for (const v of VIEWS) {
       $('#view-' + v).hidden = v !== view;
@@ -2430,6 +2851,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     }
     if (view !== 'grade' && S.sheet) { S.sheet = false; if (D) renderInbox(); }
     syncSheet();
+    if (view === 'overview') renderOverview();
     if (push && location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch (_) { /* hash only */ } }
   }
   for (const a of document.querySelectorAll('.nav')) a.addEventListener('click', (e) => { e.preventDefault(); show(a.dataset.view, true); window.scrollTo({ top: 0 }); });
@@ -2485,7 +2907,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 
   // ---------- boot ----------
   $('#today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  show(location.hash.slice(1) || 'grade', false);
+  show(location.hash.slice(1) || 'overview', false);
   D = derive();
   renderAll();
   const use = window.claude && typeof window.claude.use === 'function' ? window.claude.use('mcp') : Promise.resolve(null);
