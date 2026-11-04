@@ -782,6 +782,23 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 .ov-note { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: var(--soft); font-size: 12.5px; color: var(--ink-2); }
 .ov-note .ico { width: 15px; height: 15px; color: var(--warn); margin-top: 1px; }
 .ov-mini .sec { margin-bottom: 6px; }
+.callstrip { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.callstrip li { width: 14px; height: 14px; border-radius: 4px; }
+.callstrip li.here { background: var(--chart); }
+.callstrip li.miss { box-shadow: inset 0 0 0 1.5px var(--line-2, var(--muted)); }
+.callkey { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); margin: 0 0 14px; }
+.callkey .k { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+.callkey .k:first-child { margin-left: 0; }
+.callkey .k.here { background: var(--chart); }
+.callkey .k.exp { background: var(--chart-wash); box-shadow: inset 0 0 0 1px var(--chart-soft); }
+.callkey .k.miss { box-shadow: inset 0 0 0 1.5px var(--line-2, var(--muted)); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ov-row5 { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.ov-attcols .ov-col { position: relative; overflow: hidden; background: var(--chart-wash); box-shadow: inset 0 0 0 1px var(--chart-soft); }
+.ov-attfill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--chart); border-radius: 0 0 4px 4px; }
+.ov-attcols .ov-colv b { color: var(--ink); font-weight: 600; }
+.ov-attcols .ov-coln { font-size: 11px; }
+.ov-foot { font-size: 12px; margin: 12px 0 0; }
 .ov-plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .ov-prow { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 9px 8px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; color: var(--ink); font: inherit; }
 .ov-prow:hover { background: var(--soft); }
@@ -800,7 +817,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 .deal-t dt { font-size: 11.5px; color: var(--muted); } .deal-t dd { margin: 1px 0 0; overflow-wrap: anywhere; }
 .ov-gs.warn { background: var(--warn-soft); } .ov-gs.warn b { color: var(--warn); }
 .ov-gs.bad { background: var(--bad-soft); } .ov-gs.bad b { color: var(--bad); }
-@media (max-width: 1180px) { .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-row1, .ov-row2, .ov-row3, .ov-row4 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1180px) { .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-row1, .ov-row2, .ov-row3, .ov-row4, .ov-row5 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .ov-gstats4 { grid-template-columns: 1fr 1fr; } .deal-n { grid-template-columns: 1fr 1fr; } #members-list td.c-onb { order: 1; } }
 @media (max-width: 640px) {
   .ov-head .tools { width: 100%; } .seg { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); } .seg button { min-height: 36px; }
@@ -906,6 +923,16 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         <section class="card" aria-labelledby="ov-deals-h">
           <div class="chead"><div><h2 id="ov-deals-h">Deals submitted</h2><p id="ov-deals-sub">Mastermind deal form, newest first</p></div></div>
           <div class="ov-body" id="ov-deals"></div>
+        </section>
+      </div>
+      <div class="ov-row ov-row5">
+        <section class="card" aria-labelledby="ov-calls-h">
+          <div class="chead"><div><h2 id="ov-calls-h">Built to Win call attendance</h2><p id="ov-calls-sub">Members on each live call, from Zoom</p></div><div class="ov-big"><span id="ov-calls-rate">—</span><small>of expected seats filled</small></div></div>
+          <div class="ov-body" id="ov-calls"></div>
+        </section>
+        <section class="card" aria-labelledby="ov-progs-h">
+          <div class="chead"><div><h2 id="ov-progs-h">All program calls</h2><p id="ov-progs-sub">Built to Win, Mastermind and IGNITE</p></div></div>
+          <div class="ov-body" id="ov-progs"></div>
         </section>
       </div>
     </section>
@@ -1055,6 +1082,10 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     jayCalendar: '1nLzSlLeTb4gIoQ7r8ts',
     dealSurvey: 'krhwlGXwWa2ziE6ciHfu',
     dealFields: { address: '4QRg3MmaARh5HWR9hJTm', city: '7uTmbYD88xiqcMkB5frp', zip: 'Xaa1aTuxrQVMXi5bhHIq', source: 'G6mpa0IO2IPcguDfNwb9', owner: '5S32uKG5uIrKhIuGlygZ', contacted: 'XQrqDJTvaJ0Tk2T06OFD', why: 'gHOg3e79tcUvOyAayK4w', distress: 'ZwGVHLN3L94zJowZFEOZ', opportunity: 'FK05dxWYbV2gElf1NJCQ', arv: 'D4iNbES2LLSA049fMBa4', arvSource: 'nHuxVSX6JpeuCT8aJmtn', rehab: 's3yPFh9Pqm2XIIC6pOZy', strategy: 'lzJdyS8FDlv0vNSTPoDN', ceiling: '5aPVSSZ60TH97RbvZseF', notes: 'OzQGtIFL0U1D2GMue5Z0' },
+    // First Built to Win call each cohort was expected on (cohort starts).
+    cohortStart: { C1: '2026-08-31', C2: '2026-09-14', C3: '2026-09-28', C4: '2026-10-12', C5: '2026-11-02' },
+    // A cohort's first 7 days are its own daily kickoff calls; every other Built to Win call is for all cohorts still inside their 60 days.
+    programDays: 60,
     defaultCohort: 'all',
     autoRefreshMs: 5 * 60 * 1000,
     quietDays: 3,
@@ -1063,7 +1094,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   const S = {
     mcp: null, loading: false, loadedAt: null, cohort: CFG.defaultCohort, view: 'overview', sheet: false,
     roster: [], course: [], modules: [], assess: [],
-    rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(), onb: [], deals: [], onbOk: false, dealsOk: false, extErr: {},
+    rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(), onb: [], deals: [], onbOk: false, dealsOk: false, att: null, attOk: false, attIdx: null, extErr: {},
     err: {}, drafts: {}, opened: new Set(), mirror: new Map(), sel: null, openMember: null, openGrade: null,
     mSearch: '', uSearch: '', uFilter: '',
     sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' } },
@@ -1295,6 +1326,14 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     }
     return out;
   }
+  // Zoom attendance for Built to Win, Mastermind and IGNITE calls. Served by the team site (Supabase sync of Zoom reports).
+  async function loadAttendance() {
+    if (!window.__HOSTED) throw new Error('Call attendance shows on the team dashboard site.');
+    const r = await fetch('/api/attendance', { credentials: 'same-origin', cache: 'no-store' });
+    const d = await r.json().catch(() => null);
+    if (!r.ok || !d || d.ok === false) throw new Error((d && d.message) || 'Attendance answered ' + r.status);
+    return d;
+  }
   async function loadWon() {
     const body = { locationId: CFG.location, limit: 100, filters: [{ field: 'pipeline_id', operator: 'eq', value: CFG.pipeline }, { field: 'status', operator: 'eq', value: 'won' }] };
     const list = [];
@@ -1460,8 +1499,9 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (R.enroll) { S.enroll = new Map(R.enroll.map((e) => [e.contactId, e.createdAt || null])); S.enrollOk = true; }
     S.times = new Map();
     // Onboarding calls and deal submissions load beside the course data; a miss shows inside their own cards.
-    const extra = Promise.allSettled([loadOnboarding(), loadDeals()]).then(([o, d]) => {
+    const extra = Promise.allSettled([loadOnboarding(), loadDeals(), loadAttendance()]).then(([o, d, a]) => {
       S.extErr = {};
+      if (a.status === 'fulfilled') { S.att = a.value; S.attOk = true; S.attIdx = null; } else S.extErr.att = errorText(a.reason);
       if (o.status === 'fulfilled') { S.onb = o.value; S.onbOk = true; } else S.extErr.onb = errorText(o.reason);
       if (d.status === 'fulfilled') { S.deals = d.value; S.dealsOk = true; } else S.extErr.deals = errorText(d.reason);
     });
@@ -1480,6 +1520,91 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (S.loadedAt) syncState(Object.keys(S.err).length ? 'err' : 'live', 'Live · updated ' + S.loadedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
     else syncState('err', 'Not loaded');
     renderAll();
+  }
+
+  // ---------- call attendance ----------
+  // Zoom shows display names (and sometimes emails). Match each attendee to a paid member by email,
+  // a name the Roll Call already linked, the full name, then first + last name. Several Zoom sessions
+  // on one day (reconnects, breakouts) count as one call day; a member counts as there after 10 minutes,
+  // or half the call when it ran shorter than 20 minutes.
+  const nrm = (v) => String(v || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[\u2019'`]/g, ' ')
+    .replace(/[0-9]/g, ' ').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const etDay = (t) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  function attIndex() {
+    if (!S.attOk || !S.att) return null;
+    if (S.attIdx && S.attIdx.roster === S.roster) return S.attIdx;
+    const ids = new Set(S.roster.map((r) => r.contactId));
+    const byEmail = new Map(), byFull = new Map(), byFL = new Map();
+    const add = (map, k, id) => { if (k) map.set(k, map.has(k) && map.get(k) !== id ? '' : id); };
+    for (const r of S.roster) {
+      if (r.email) byEmail.set(r.email.toLowerCase(), r.contactId);
+      const t = nrm(r.name).split(' ').filter(Boolean);
+      add(byFull, t.join(' '), r.contactId);
+      if (t.length >= 2) add(byFL, t[0] + '|' + t[t.length - 1], r.contactId);
+    }
+    const toks = [...new Map(S.roster.map((r) => [r.contactId, { id: r.contactId, t: nrm(r.name).split(' ').filter(Boolean) }])).values()].filter((x) => x.t.length);
+    const alias = S.att.aliases || {};
+    const match = (name, email) => {
+      if (email && byEmail.has(email)) return byEmail.get(email);
+      const n = nrm(name);
+      if (Object.prototype.hasOwnProperty.call(alias, n)) { const a = alias[n]; if (a === null) return null; if (ids.has(a)) return a; }
+      if (byFull.get(n)) return byFull.get(n);
+      const t = n.split(' ').filter(Boolean);
+      if (t.length >= 2) {
+        const fl = byFL.get(t[0] + '|' + t[t.length - 1]) || byFL.get(t[0] + '|' + t[1]);
+        if (fl) return fl;
+      }
+      // Short forms: one word ("adelina", "farahsiddiqui", "Mitch") or a short first name ("chris mallin").
+      // Only counted when exactly one member fits.
+      const one = (test) => { const hit = toks.filter(test); return hit.length === 1 ? hit[0].id : null; };
+      if (t.length === 1 && t[0].length >= 3) return one((x) => x.t.join('') === t[0] || x.t[0] === t[0]) || (t[0].length >= 4 ? one((x) => x.t[0].startsWith(t[0])) : null);
+      if (t.length >= 2 && t[0].length >= 3) return one((x) => x.t.length >= 2 && x.t[0].startsWith(t[0]) && x.t[x.t.length - 1] === t[t.length - 1]);
+      return null;
+    };
+    const days = new Map();
+    for (const sn of S.att.sessions || []) {
+      if (!sn.p || !sn.p.length) continue;
+      const ymd = etDay(sn.start), k = sn.series + '|' + ymd;
+      let d = days.get(k);
+      if (!d) { d = { series: sn.series, ymd, t: sn.start, mins: 0, people: new Set(), secs: new Map(), unmatched: new Set() }; days.set(k, d); }
+      if (sn.start < d.t) d.t = sn.start;
+      d.mins += sn.mins || 0;
+      for (const [n, e, sec] of sn.p) {
+        const email = String(e || '').toLowerCase();
+        d.people.add(email || nrm(n));
+        const id = match(n, email);
+        if (id) d.secs.set(id, (d.secs.get(id) || 0) + (Number(sec) || 0));
+        else if (sn.series === 'btw') d.unmatched.add(n);
+      }
+    }
+    const list = [...days.values()].map((d) => {
+      const need = d.mins && d.mins < 20 ? d.mins * 30 : 600;
+      return { series: d.series, ymd: d.ymd, t: d.t, mins: d.mins, total: d.people.size, present: new Set([...d.secs].filter(([, v]) => v >= need).map(([id]) => id)), unmatched: [...d.unmatched] };
+    }).sort((a, b) => String(a.t).localeCompare(String(b.t)));
+    S.attIdx = { roster: S.roster, days: list, syncedAt: S.att.synced_at || null };
+    return S.attIdx;
+  }
+  const addDays = (ymd, n) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  function kickoffOf(ymd) { for (const [c, st] of Object.entries(CFG.cohortStart)) if (ymd >= st && ymd < addDays(st, 7)) return c; return null; }
+  function expectedFor(cohort, ymd) {
+    const st = CFG.cohortStart[cohort];
+    if (!st || ymd < st || ymd >= addDays(st, CFG.programDays)) return false;
+    const k = kickoffOf(ymd);
+    return !k || k === cohort;
+  }
+  function attOf(r, idx) {
+    if (!idx) return null;
+    const today = etDay(Date.now());
+    const btw = idx.days.filter((d) => d.series === 'btw' && d.ymd <= today && expectedFor(r.cohort, d.ymd));
+    const came = btw.filter((d) => d.present.has(r.contactId));
+    const mine = idx.days.filter((d) => d.present.has(r.contactId));
+    const last3 = btw.slice(-3);
+    return {
+      held: btw.length, came: came.length, rate: btw.length ? came.length / btw.length : null, btw,
+      mm: mine.filter((d) => d.series === 'mastermind').length, ig: mine.filter((d) => d.series === 'ignite').length,
+      last: mine.length ? mine[mine.length - 1] : null,
+      missed3: last3.length === 3 && last3.every((d) => !d.present.has(r.contactId)),
+    };
   }
 
   // ---------- derived ----------
@@ -1536,6 +1661,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       const last = latest(list);
       return { s: 'missed', at: last.start, why: last.status === 'noshow' ? 'No-show' : 'Cancelled' };
     };
+    const aIdx = attIndex();
     const byMember = members.map((r) => {
       const roll = S.rollup.get(r.contactId);
       const total = (roll && roll.total) || S.course.length || 14;
@@ -1556,6 +1682,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         files: nFiles, last, login, enrolledAt: S.enroll.get(r.contactId) || null,
         onb: onbOf(onbBy.get(r.contactId)), feedback: (fbBy.get(r.contactId) || []).filter((e) => e.status !== 'cancelled' && new Date(e.start).getTime() < nowMs).length,
         deals: dealsBy.get(r.contactId) || [],
+        att: attOf(r, aIdx),
       });
     });
     const nameCount = new Map();
@@ -1597,6 +1724,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       if (m.login === 'no') r = { rank: 0, cls: 'bad', label: 'No course login', note: 'Paid ' + fmtDay(m.wonAt) + ' but has no access to the course' };
       else if (m.onb.s === 'none' || m.onb.s === 'missed') r = { rank: 1, cls: 'warn', label: m.onb.s === 'none' ? 'No onboarding call' : 'Onboarding ' + m.onb.why.toLowerCase(), note: m.onb.s === 'none' ? 'Nothing booked on Jay’s onboarding calendar' : m.onb.why + ' on ' + fmtDay(m.onb.at) + ', not rebooked' };
       else if (m.redo) r = { rank: 1, cls: 'bad', label: m.redo + ' redo to resubmit', note: 'Sent back for redo, no new try yet' };
+      else if (m.att && m.att.missed3) r = { rank: 2, cls: 'warn', label: 'Missed the last 3 calls', note: 'Last Built to Win call ' + (m.att.came ? fmtDay(m.att.btw.filter((d) => d.present.has(m.contactId)).pop().t) : 'never attended') };
       else if (m.hwIn === 0) { const d = daysSince(m.wonAt); r = { rank: 2, cls: 'warn', label: 'No homework yet', note: d != null ? 'Paid ' + d + (d === 1 ? ' day' : ' days') + ' ago' : 'No submissions in the course' }; }
       else { const d = daysSince(m.last); if (d != null && d >= CFG.quietDays) r = { rank: 3, cls: 'none', label: 'Quiet for ' + d + ' days', note: 'Last activity ' + fmtWhen(m.last) }; }
       if (r) follow.push(Object.assign({ member: m }, r));
@@ -1640,7 +1768,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const deals = [];
     for (const m of byMember) for (const dl of m.deals) deals.push(Object.assign({ member: m }, dl));
     deals.sort((a, b) => String(b.at).localeCompare(String(a.at)));
-    return { deals, members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
+    return { attIdx: aIdx, deals, members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
   }
 
   // ---------- grader ----------
@@ -2459,7 +2587,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (graderFocused() && box.contains(document.activeElement)) return;
     const q = S.mSearch.trim().toLowerCase();
     let rows = D.members.filter((m) => !q || (m.name + ' ' + m.email).toLowerCase().includes(q));
-    rows = sortRows(rows, S.sort.members, { name: (m) => m.name.toLowerCase(), cohort: (m) => Number(m.cohort.slice(1)) * 1000 + m.progress * 100, progress: (m) => m.progress, last: (m) => m.last, onb: (m) => ({ none: 0, missed: 1, upcoming: 2, done: 3 }[m.onb.s] ?? -1), deals: (m) => m.deals.length });
+    rows = sortRows(rows, S.sort.members, { name: (m) => m.name.toLowerCase(), cohort: (m) => Number(m.cohort.slice(1)) * 1000 + m.progress * 100, progress: (m) => m.progress, last: (m) => m.last, onb: (m) => ({ none: 0, missed: 1, upcoming: 2, done: 3 }[m.onb.s] ?? -1), deals: (m) => m.deals.length, calls: (m) => (m.att && m.att.held ? m.att.came / m.att.held : -1) });
     const allMode = S.cohort === 'all';
     if (!rows.length) { box.replaceChildren(h('div', { class: 'empty' }, 'No members match “' + S.mSearch + '”.')); return; }
     const tbody = h('tbody');
@@ -2479,16 +2607,17 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         h('td', { class: 'c-stat r' + (m.passed ? ' oknum' : ' zero'), 'data-label': 'passed' }, fmtInt(m.passed)),
         h('td', { class: 'c-stat r' + (m.redo ? ' badnum' : ' zero'), 'data-label': 'redo' }, fmtInt(m.redo)),
         h('td', { class: 'c-stat r' + (m.deals.length ? ' oknum' : ' zero'), 'data-label': m.deals.length === 1 ? 'deal' : 'deals' }, fmtInt(m.deals.length)),
+        S.attOk ? h('td', { class: 'c-stat c-calls r' + (!m.att || !m.att.held ? ' zero' : m.att.missed3 ? ' warnnum' : ''), 'data-label': 'BTW calls', title: m.att && m.att.held ? m.att.came + ' of ' + m.att.held + ' expected Built to Win calls (Cohort ' + m.cohort.slice(1) + ' kickoff week + weekly calls)' : 'No Built to Win calls held yet' }, m.att && m.att.held ? m.att.came + '/' + m.att.held : '') : null,
         h('td', { class: 'hide-narrow hide-mid c-login' + (m.login === 'no' ? ' is-no' : '') }, m.login === 'yes' ? 'Active' : m.login === 'no' ? h('span', { class: 'badnum' }, 'No login') : ''),
         h('td', { class: 'hide-narrow hide-mid c-last' }, m.last ? ago(m.last) + ' ago' : ''));
       tbody.append(tr);
-      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: allMode ? '11' : '10' }, memberPanel(m))));
+      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: String((allMode ? 11 : 10) + (S.attOk ? 1 : 0)) }, memberPanel(m))));
     }
     box.replaceChildren(h('table', null,
       h('thead', null, h('tr', null,
         headCell('members', 'name', 'Member'), allMode ? headCell('members', 'cohort', 'Cohort') : null, headCell('members', 'onb', 'Onboarding'), headCell('members', 'progress', 'Lessons done'),
         headCell('members', 'hwIn', 'Turned in', 'r'), headCell('members', 'waiting', 'Waiting', 'r'),
-        headCell('members', 'passed', 'Passed', 'r'), headCell('members', 'redo', 'Redo', 'r'), headCell('members', 'deals', 'Deals', 'r'),
+        headCell('members', 'passed', 'Passed', 'r'), headCell('members', 'redo', 'Redo', 'r'), headCell('members', 'deals', 'Deals', 'r'), S.attOk ? headCell('members', 'calls', 'Calls', 'r') : null,
         h('th', { class: 'plain hide-narrow hide-mid', scope: 'col' }, 'Course login'), headCell('members', 'last', 'Last activity', 'hide-narrow hide-mid'))),
       tbody));
   }
@@ -2501,6 +2630,11 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     fact('Homework', m.hwIn + ' of ' + D.assignments.length + ' turned in');
     fact('Last activity', m.last ? ago(m.last) + ' ago · ' + fmtWhen(m.last) : 'No lessons finished yet');
     if (S.onbOk) { fact('Onboarding call', onbText(m.onb)); fact('Feedback calls with Jay', m.feedback ? String(m.feedback) : 'None yet'); }
+    if (m.att) {
+      fact('Built to Win calls', m.att.held ? m.att.came + ' of ' + m.att.held + ' expected' + (m.att.missed3 ? ' · missed last 3' : '') : 'None held yet for Cohort ' + m.cohort.slice(1));
+      fact('Mastermind and IGNITE', m.att.mm + ' Mastermind · ' + m.att.ig + ' IGNITE');
+      fact('Last on a call', m.att.last ? ({ btw: 'Built to Win', mastermind: 'Mastermind', ignite: 'IGNITE' }[m.att.last.series]) + ' · ' + fmtDay(m.att.last.t) : 'No program calls found');
+    }
     if (S.dealsOk) fact('Deals submitted', m.deals.length ? m.deals.length + ' · last ' + fmtDay(m.deals[0].at) : 'None yet');
     const mods = h('div', { class: 'mods' });
     const cp = S.catProg.get(m.contactId);
@@ -2528,7 +2662,13 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         h('td', { class: 'c-b r' }, x ? h('button', { type: 'button', class: 'btn small', onclick: (e) => { e.stopPropagation(); S.openGrade = gradeOpen ? null : key; renderMembers(); } }, gradeOpen ? 'Close' : (x.rec.status === 'processing' ? 'Grade' : 'Regrade')) : '')));
       if (gradeOpen && x) tb.append(h('tr', { class: 'gradebox' }, h('td', { colspan: '6' }, grader(x.rec, { memberName: m.name, lessonShort: l.short, gradeKey: key }))));
     }
-    const panel = h('div', { class: 'dpanel' }, facts, ...(m.deals.length ? [h('h3', { class: 'sec' }, 'Deals submitted (' + m.deals.length + ')'), dealCards(m.deals)] : []), h('h3', { class: 'sec' }, 'Module progress'), mods, h('h3', { class: 'sec' }, 'Assignments'),
+    const strip = m.att && m.att.held ? [h('h3', { class: 'sec' }, 'Built to Win calls (' + m.att.came + ' of ' + m.att.held + ')'),
+      h('ol', { class: 'callstrip', 'aria-label': 'Built to Win calls, oldest first' }, m.att.btw.map((d) => {
+        const here = d.present.has(m.contactId);
+        return h('li', { class: here ? 'here' : 'miss', title: fmtShort(d.t) + ' · ' + (here ? 'attended' : 'missed') }, h('span', { class: 'sr' }, fmtShort(d.t) + ' ' + (here ? 'attended' : 'missed')));
+      })),
+      h('p', { class: 'callkey' }, h('span', { class: 'k here' }), 'Attended', h('span', { class: 'k miss' }), 'Missed', h('span', { class: 'muted' }, ' · oldest to newest'))] : [];
+    const panel = h('div', { class: 'dpanel' }, facts, ...strip, ...(m.deals.length ? [h('h3', { class: 'sec' }, 'Deals submitted (' + m.deals.length + ')'), dealCards(m.deals)] : []), h('h3', { class: 'sec' }, 'Module progress'), mods, h('h3', { class: 'sec' }, 'Assignments'),
       h('div', { class: 'tablebox hwtable' }, h('table', null,
         h('thead', null, h('tr', null, ['Assignment', 'Status', 'Try', 'Turned in', 'Files', ''].map((t, i) => h('th', { class: 'plain' + (i === 2 || i === 5 ? ' r' : '') + (i === 3 ? ' hide-narrow' : ''), scope: 'col' }, t)))), tb)));
     panel.addEventListener('click', (e) => e.stopPropagation());
@@ -2831,6 +2971,59 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     renderGradingCard(O);
     renderOnbCard();
     renderDealsCard(O);
+    renderCallsCard(animate);
+  }
+  function renderCallsCard(animate) {
+    const box = $('#ov-calls'), side = $('#ov-progs');
+    const idx = D.attIdx;
+    if (!idx) {
+      const msg = S.extErr.att ? (window.__HOSTED ? 'Zoom attendance didn’t load. ' + S.extErr.att : S.extErr.att) : 'Loading Zoom attendance…';
+      box.replaceChildren(h('p', { class: S.extErr.att && window.__HOSTED ? 'sect-err' : 'muted' }, msg)); side.replaceChildren();
+      $('#ov-calls-rate').textContent = '—';
+      return;
+    }
+    const P = S.ovPeriod, since = P ? Date.now() - P * 86400000 : 0;
+    const inP = (d) => new Date(d.t).getTime() >= since;
+    const ms = D.members;
+    const btw = idx.days.filter((d) => d.series === 'btw' && inP(d) && ms.some((m) => expectedFor(m.cohort, d.ymd)));
+    const cols = btw.slice(-21).map((d) => {
+      const due = ms.filter((m) => expectedFor(m.cohort, d.ymd));
+      const came = due.filter((m) => d.present.has(m.contactId)).length;
+      const extra = ms.filter((m) => !expectedFor(m.cohort, d.ymd) && d.present.has(m.contactId)).length;
+      return { d, due: due.length, came, extra, kick: kickoffOf(d.ymd) };
+    });
+    let seats = 0, filled = 0;
+    for (const c of cols.length === btw.length ? cols : btw.map((d) => { const due = ms.filter((m) => expectedFor(m.cohort, d.ymd)); return { due: due.length, came: due.filter((m) => d.present.has(m.contactId)).length }; })) { seats += c.due; filled += c.came; }
+    $('#ov-calls-rate').textContent = seats ? Math.round((filled / seats) * 100) + '%' : '—';
+    $('#ov-calls-sub').textContent = (cols.length ? cols.length + (cols.length === 1 ? ' call' : ' calls') + (btw.length > cols.length ? ' (latest ' + cols.length + ' of ' + btw.length + ')' : '') : 'No calls') + ', ' + (P ? 'last ' + P + ' days' : 'all time') + '';
+    const missed = ms.filter((m) => m.att && m.att.missed3);
+    if (!cols.length) box.replaceChildren(h('p', { class: 'muted' }, 'No Built to Win calls in this period for ' + cohortName() + '.'));
+    else {
+      const top = Math.max(1, ...cols.map((c) => c.due));
+      box.replaceChildren(h('p', { class: 'callkey' }, h('span', { class: 'k here' }), 'Came', h('span', { class: 'k exp' }), 'Expected (' + cohortName() + ', kickoff week or weekly call)'), h('div', { class: 'ov-cols ov-attcols' }, cols.map((c, i) => {
+        const rate = c.due ? c.came / c.due : 0;
+        const bar = h('span', { class: 'ov-col', style: '--h:' + ((c.due / top) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 30 + 'ms' : '') }, h('span', { class: 'ov-attfill', style: 'height:' + (rate * 100).toFixed(1) + '%' }));
+        const w = h('div', { class: 'ov-colwrap static', tabindex: '0', 'aria-label': fmtShort(c.d.t) + ': ' + c.came + ' of ' + c.due + ' members on the call' },
+          h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, h('b', null, String(c.came)), '/' + c.due), bar), h('span', { class: 'ov-coln' }, i === 0 || cols[i - 1].d.ymd.slice(5, 7) !== c.d.ymd.slice(5, 7) ? fmtShort(c.d.t) : String(Number(c.d.ymd.slice(8)))));
+        const tip = (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, new Date(c.d.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })), h('span', null, c.came + ' of ' + c.due + ' ' + cohortName() + ' members (' + Math.round(rate * 100) + '%)'), h('span', null, c.kick ? 'Cohort ' + c.kick.slice(1) + ' kickoff week' : 'Weekly call for every cohort in its 60 days'), h('span', { class: 'muted' }, c.d.total + ' people on the call · ' + (c.d.mins || '?') + ' min' + (c.extra ? ' · ' + c.extra + ' from other cohorts' : ''))]);
+        w.addEventListener('pointermove', tip); w.addEventListener('pointerleave', () => ovTip.hide());
+        return w;
+      })));
+    }
+    // Side card: every program, plus who to nudge.
+    const stat = (label, val, sub, cls) => h('div', { class: 'ov-gs' + (cls ? ' ' + cls : '') }, h('span', null, label), h('b', null, val), h('small', null, sub));
+    const prog = (series, label) => {
+      const ds = idx.days.filter((d) => d.series === series && inP(d));
+      const avg = ds.length ? Math.round(ds.reduce((t, d) => t + d.total, 0) / ds.length) : 0;
+      const mine = new Set(); for (const d of ds) for (const m of ms) if (d.present.has(m.contactId)) mine.add(m.contactId);
+      return stat(label, fmtInt(ds.length) + (ds.length === 1 ? ' call' : ' calls'), ds.length ? 'avg ' + avg + ' on the call · ' + mine.size + ' members' : 'none in this period');
+    };
+    const unmatched = new Set(); for (const d of btw) for (const n of d.unmatched) unmatched.add(n);
+    side.replaceChildren(
+      h('div', { class: 'ov-gstats' }, prog('btw', 'Built to Win'), prog('mastermind', 'Mastermind'), prog('ignite', 'IGNITE'),
+        stat('Missed last 3', fmtInt(missed.length), missed.length ? 'Built to Win members' : 'nobody', missed.length ? 'warn' : '')),
+      missed.length ? h('div', { class: 'ov-mini' }, h('h3', { class: 'sec' }, 'Missed the last 3 Built to Win calls'), h('ul', { class: 'ov-plist' }, missed.slice(0, 5).map((m) => h('li', null, h('button', { type: 'button', class: 'ov-prow', onclick: () => openMember(m.contactId) }, avatar(m.name), h('span', { class: 'ov-pn' }, h('b', null, m.name), h('small', null, m.att.came + ' of ' + m.att.held + ' calls · ' + (m.att.last ? 'last on ' + fmtShort(m.att.last.t) : 'never on a call'))), icon('chev')))))) : null,
+      h('p', { class: 'ov-foot muted' }, 'From Zoom participant lists' + (idx.syncedAt ? ', synced ' + ago(idx.syncedAt) + ' ago' : '') + '. Team and note-takers are left out.' + (unmatched.size ? ' ' + unmatched.size + ' Built to Win attendee names didn’t match a member (phones, nicknames).' : '')));
   }
   function renderOnbCard() {
     const box = $('#ov-onb');

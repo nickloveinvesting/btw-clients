@@ -13,6 +13,8 @@ const TOKEN = Bun.env.GHL_TOKEN || "";
 const SECRET = Bun.env.SESSION_SECRET || "";
 const COURSES_VERSION = Bun.env.GHL_COURSES_VERSION || "v3";
 const PASSWORD = Bun.env.DASH_PASSWORD || "";
+const ATTENDANCE_URL = Bun.env.ATTENDANCE_URL || ""; // Supabase btw-attendance function (Zoom attendance), key included
+let attCache: { t: number; body: unknown } | null = null;
 const ACCOUNTS = new Map<string, string>(); // lowercased email -> display name
 for (const part of (Bun.env.DASH_ACCOUNTS || "").split(";")) {
   const i = part.indexOf(":");
@@ -176,6 +178,19 @@ Bun.serve({
         const r = await fetch(src);
         if (!r.ok) return new Response("File fetch failed", { status: 502 });
         return new Response(r.body, { headers: { "Content-Type": r.headers.get("content-type") || "application/octet-stream", "Cache-Control": "private, max-age=3600" } });
+      }
+      if (u.pathname === "/api/attendance" && req.method === "GET") {
+        if (!ATTENDANCE_URL) return json({ ok: false, message: "Attendance source isn't set on the server (ATTENDANCE_URL)." });
+        if (attCache && Date.now() - attCache.t < 5 * 60e3) return json(attCache.body);
+        try {
+          const r = await fetch(ATTENDANCE_URL);
+          if (!r.ok) return json({ ok: false, message: "Attendance source answered " + r.status });
+          const body = { ok: true, ...(await r.json()) };
+          attCache = { t: Date.now(), body };
+          return json(body);
+        } catch (e: any) {
+          return json({ ok: false, message: "Couldn't reach the attendance source: " + (e?.message || e) });
+        }
       }
       return json({ ok: false, message: "Not found" }, 404);
     }
