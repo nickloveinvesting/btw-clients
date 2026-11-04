@@ -1445,7 +1445,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       if (t && t !== 'none') for (const v of t.values()) if (v && (!last || v > last)) last = v;
       let nFiles = 0;
       for (const l of assignments) nFiles += (files.get(r.contactId + '|' + l.id) || []).length;
-      const login = S.enrollOk ? (S.enroll.has(r.contactId) ? 'yes' : 'no') : (t === 'none' ? 'no' : null);
+      // Finishing a lesson proves course access, even when the enrollment list misses the member.
+      const login = (last || done > 0) ? 'yes' : S.enrollOk ? (S.enroll.has(r.contactId) ? 'yes' : 'no') : (t === 'none' ? 'no' : null);
       return Object.assign({}, r, {
         done, total, progress: total ? done / total : 0, hwIn: hw.length,
         passed: hw.filter((x) => x.rec.status === 'passed').length,
@@ -2831,7 +2832,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     $('#ov-grading').replaceChildren(
       h('div', { class: 'ov-gstats' },
         stat('Waiting now', fmtInt(D.queue.length), D.queue.length ? 'submissions to review' : 'queue is clear', D.queue.length ? 'warn' : ''),
-        stat('Oldest waiting', oldest ? ago(oldest.turnedIn) : '—', oldest ? oldest.member.name : 'nothing waiting', oldest && daysSince(oldest.turnedIn) >= 2 ? 'warn' : ''),
+        stat('Oldest waiting', oldest ? ago(oldest.turnedIn) : '—', oldest ? oldest.member.name : D.queue.length ? 'turn-in times not recorded' : 'nothing waiting', oldest && daysSince(oldest.turnedIn) >= 2 ? 'warn' : ''),
         stat('Graded', fmtInt(O.graded), fmtInt(O.graded - O.redo) + ' passed · ' + fmtInt(O.redo) + ' redo'),
         stat('Need a follow-up', fmtInt(D.follow.length), 'members to nudge', D.follow.length ? 'bad' : '')),
       h('button', { type: 'button', class: 'btn primary block', onclick: () => { show('grade', true); window.scrollTo({ top: 0 }); if (isPhone() && D.queue.length) selectQueue(D.queue[0].rec.id); } }, icon('check'), D.queue.length ? 'Grade the ' + D.queue.length + ' waiting' : 'Open the grading queue'));
