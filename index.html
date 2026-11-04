@@ -686,9 +686,28 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* Overview: program health. Bond/Revello-style cards, one accent (deep lime) for data, status colors only for member state. */
-:root { --chart: #4D7C0F; --chart-soft: #D3E2B4; --chart-wash: rgba(77, 124, 15, .16); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart: #C9E957; --chart-soft: #3B4A1E; --chart-wash: rgba(201, 233, 87, .16); } }
-:root[data-theme="dark"] { --chart: #C9E957; --chart-soft: #3B4A1E; --chart-wash: rgba(201, 233, 87, .16); }
+:root { --chart: #4D7C0F; --chart-soft: #D3E2B4; --chart-wash: rgba(77, 124, 15, .16); --prog-btw: #4D7C0F; --prog-mm: #2A78D6; --prog-ig: #D55181; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart: #C9E957; --chart-soft: #3B4A1E; --chart-wash: rgba(201, 233, 87, .16); --prog-btw: #7FA324; --prog-mm: #3987E5; --prog-ig: #D55181; } }
+:root[data-theme="dark"] { --chart: #C9E957; --chart-soft: #3B4A1E; --chart-wash: rgba(201, 233, 87, .16); --prog-btw: #7FA324; --prog-mm: #3987E5; --prog-ig: #D55181; }
+/* Program colors (Built to Win, Mastermind, IGNITE) are only used together on the Attendance tab; each always ships with its name. */
+.ov-attser .ov-col.s-btw, .cell.s-btw, .at-key .s-btw { background: var(--prog-btw); }
+.ov-attser .ov-col.s-mastermind, .cell.s-mastermind, .at-key .s-mastermind { background: var(--prog-mm); }
+.ov-attser .ov-col.s-ignite, .cell.s-ignite, .at-key .s-ignite { background: var(--prog-ig); }
+.at-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); margin: 0 0 10px; }
+.at-key span { display: inline-flex; align-items: center; gap: 6px; }
+.at-key i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.at-key i.miss { box-shadow: inset 0 0 0 1.5px var(--muted); background: none; }
+.ov-coln.at-ser.s-btw { color: var(--prog-btw); } .ov-coln.at-ser.s-mastermind { color: var(--prog-mm); } .ov-coln.at-ser.s-ignite { color: var(--prog-ig); }
+.ov-coln.at-ser { font-weight: 600; }
+.cell.miss { background: none; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.amap thead tr.lessons th { padding: 6px 1px 8px; }
+.amap .ah { display: block; font-size: 11px; line-height: 1.25; }
+.amap .ah b { display: block; font-weight: 700; }
+.amap .ah b.s-btw { color: var(--prog-btw); } .amap .ah b.s-mastermind { color: var(--prog-mm); } .amap .ah b.s-ignite { color: var(--prog-ig); }
+.amap .ah small { display: block; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.amap td .cell { width: 20px; height: 20px; }
+.at-mapcard .legend { padding: 0 18px 10px; }
+@media (max-width: 640px) { .at-mapcard .legend { padding: 0 16px 10px; } .amap col:first-child { width: 132px !important; } .amap .namecol { font-size: 12.5px; } }
 .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
 .seg button { border: 0; background: none; border-radius: 9px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: background-color .15s, color .15s; }
 .seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); }
@@ -855,6 +874,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
 #view-deals, #view-attendance { display: flex; flex-direction: column; gap: 14px; }
 #view-deals[hidden], #view-attendance[hidden] { display: none; }
 .nl-short { display: none; }
+@media (max-width: 640px) { .nl-short { display: inline; } .nav .nl-long { display: none; } }
 #att-list table { width: 100%; border-collapse: collapse; }
 #att-list td { white-space: nowrap; }
 #att-list th { white-space: normal; }
@@ -1182,6 +1202,11 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
         <section class="card" aria-labelledby="at-who-h"><div class="chead"><div><h2 id="at-who-h">Who’s coming</h2><p>Unique people, by who they are in GoHighLevel</p></div></div><div class="ov-body" id="at-who"></div></section>
         <section class="card" aria-labelledby="at-slip-h"><div class="chead"><div><h2 id="at-slip-h">Slipping away</h2><p>Came to 3+ calls, nothing in the last 14 days</p></div></div><div class="ov-body" id="at-slip"></div></section>
       </div>
+      <section class="card at-mapcard" aria-labelledby="at-map-h">
+        <div class="chead"><div><h2 id="at-map-h">Attendance map</h2><p id="at-map-sub">One row per person, one column per call. Hover a square for details.</p></div></div>
+        <div class="legend" id="at-map-key"></div>
+        <div class="mapwrap" id="at-map"><div class="empty">Loading the attendance map…</div></div>
+      </section>
       <section class="card dl-tablecard" aria-labelledby="at-list-h">
         <div class="chead"><div><h2 id="at-list-h">Everyone who attended</h2><p id="at-list-sub">Open a person to see every call they joined.</p></div><input type="search" id="at-search" placeholder="Filter name or email" aria-label="Filter people"></div>
         <div class="tablebox" id="att-list"><div class="empty">Loading attendance…</div></div>
@@ -3534,7 +3559,58 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     renderAttProgs(X);
     renderAttWho(X, animate);
     renderAttSlip();
+    renderAttMap(X);
     renderAttTable(X);
+  }
+  function renderAttMap(X) {
+    const box = $('#at-map');
+    const cols = X.days;
+    const series = ['btw', 'mastermind', 'ignite'].filter((g) => cols.some((d) => d.series === g));
+    $('#at-map-key').replaceChildren(h('span', null, h('i', { class: 'cell' }), 'Not on the call'), ...series.map((g) => h('span', null, h('i', { class: 'cell s-' + g }), 'On ' + PROG[g])),
+      cols.some((d) => d.series === 'btw') ? h('span', null, h('i', { class: 'cell miss' }), 'Built to Win call they were expected on, missed') : null);
+    if (!cols.length || !X.people.length) { box.replaceChildren(h('div', { class: 'empty' }, 'No calls in this period.')); return; }
+    $('#at-map-sub').textContent = fmtInt(X.people.length) + ' people × ' + fmtInt(cols.length) + ' calls, ' + X.per + '. One row per person, one column per call. Hover a square for details.';
+    // Groups: Built to Win by cohort (newest first), then Legacy clients, BTW leads, everyone else.
+    const groups = new Map();
+    const gKey = (p) => p.kind === 'btw' ? 'b' + p.member.cohort.slice(1).padStart(2, '0') : p.kind === 'legacy' ? 'x1' : p.kind === 'lead' ? 'x2' : 'x3';
+    const gName = (k, p) => k[0] === 'b' ? ['Built to Win · Cohort ' + p.member.cohort.slice(1), ''] : k === 'x1' ? ['Legacy clients', ''] : k === 'x2' ? ['Built to Win leads', 'applied, not paid'] : ['Not in the client list', 'guests and prospects'];
+    for (const p of X.people) { const k = gKey(p); if (!groups.has(k)) groups.set(k, { name: gName(k, p), list: [] }); groups.get(k).list.push(p); }
+    const order = [...groups.keys()].sort((a, b) => (a[0] === 'b' && b[0] === 'b') ? b.localeCompare(a) : a[0] === 'b' ? -1 : b[0] === 'b' ? 1 : a.localeCompare(b));
+    const colIdx = new Map(cols.map((d, i) => [d, i]));
+    const tb = h('tbody');
+    const cnt = cols.map(() => 0);
+    for (const k of order) {
+      const g = groups.get(k);
+      g.list.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+      tb.append(h('tr', { class: 'cohrow' }, h('th', { scope: 'rowgroup', colspan: String(cols.length + 2) }, g.name[0], h('small', null, g.list.length + (g.list.length === 1 ? ' person' : ' people') + (g.name[1] ? ' · ' + g.name[1] : '')))));
+      for (const p of g.list) {
+        const came = new Map(p.mine.map((c) => [c.d, c.secs]));
+        const tr = h('tr', { class: 'mrow' }, h('th', { scope: 'row', class: 'namecol', title: p.name + ' · ' + p.tag + (p.email ? ' · ' + p.email : '') }, p.name));
+        cols.forEach((d, i) => {
+          const secs = came.get(d);
+          const expected = !secs && p.kind === 'btw' && d.series === 'btw' && expectedFor(p.member.cohort, d.ymd);
+          if (secs) cnt[i]++;
+          const label = p.name + ' · ' + PROG[d.series] + ' ' + fmtShort(d.t) + ': ' + (secs ? 'on the call ' + Math.round(secs / 60) + ' min' : expected ? 'missed (expected)' : 'not on the call');
+          tr.append(h('td', { class: i && cols[i - 1].ymd.slice(0, 7) !== d.ymd.slice(0, 7) ? 'modstart' : null }, h('span', { class: 'cell' + (secs ? ' s-' + d.series : expected ? ' miss' : ''), role: 'img', 'aria-label': label, title: label })));
+        });
+        tr.append(h('td', { class: 'cnt' }, p.total + ' / ' + cols.length));
+        tb.append(tr);
+      }
+    }
+    // Month header spans + one header per call.
+    const months = [];
+    cols.forEach((d, i) => { const m = d.ymd.slice(0, 7), last = months[months.length - 1]; if (last && last.m === m) last.span++; else months.push({ m, span: 1, t: d.t }); });
+    const total = X.people.length;
+    const table = h('table', { class: 'map amap', style: 'min-width:' + (210 + cols.length * 38 + 70) + 'px' },
+      h('colgroup', null, h('col', { style: 'width:210px' }), cols.map(() => h('col', null)), h('col', { style: 'width:70px' })),
+      h('thead', null,
+        h('tr', { class: 'modhead' }, h('th', { class: 'namecol', scope: 'col' }), months.map((m, i) => h('th', { scope: 'colgroup', colspan: String(m.span), class: i ? 'modstart' : null }, new Date(m.t).toLocaleDateString('en-US', { month: 'long' }))), h('th', { scope: 'col' })),
+        h('tr', { class: 'lessons' }, h('th', { class: 'namecol', scope: 'col' }, total + ' people'),
+          cols.map((d, i) => h('th', { scope: 'col', class: i && cols[i - 1].ymd.slice(0, 7) !== d.ymd.slice(0, 7) ? 'modstart' : null, title: PROG[d.series] + ' · ' + new Date(d.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + cnt[i] + ' of these ' + total + ' people · ' + d.total + ' on the Zoom' },
+            h('span', { class: 'ah' }, h('b', { class: 's-' + d.series }, PROG_S[d.series] === 'IGNITE' ? 'IG' : PROG_S[d.series]), Number(d.ymd.slice(8)), h('small', null, cnt[i])))),
+          h('th', { scope: 'col', class: 'cnt' }, 'Calls'))),
+      tb);
+    box.replaceChildren(table);
   }
   function renderAttKpis(X, animate) {
     const tile = (label, val, fmt, sub, delta) => { const v = h('div', { class: 'ov-val' }); countUp(v, val, fmt, animate); return h('article', { class: 'ov-kpi' }, h('div', { class: 'ov-kl' }, label), v, h('div', { class: 'ov-ks' }, sub), delta); };
@@ -3558,11 +3634,12 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     $('#at-calls-sub').textContent = (S.atProg === 'all' ? 'Every program call' : PROG[S.atProg] + ' calls') + ', ' + X.per + (X.days.length > cols.length ? ' (latest ' + cols.length + ' of ' + X.days.length + ')' : '') + ' · team left out';
     if (!cols.length) { $('#at-calls').replaceChildren(h('p', { class: 'muted' }, 'No calls in this period.')); return; }
     const top = Math.max(1, ...cols.map((d) => d.total));
-    $('#at-calls').replaceChildren(h('div', { class: 'ov-cols ov-stallcols' }, cols.map((d, i) => {
-      const bar = h('span', { class: 'ov-col', style: '--h:' + ((d.total / top) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 25 + 'ms' : '') });
+    const series = [...new Set(cols.map((d) => d.series))];
+    $('#at-calls').replaceChildren(series.length > 1 ? h('p', { class: 'at-key' }, ['btw', 'mastermind', 'ignite'].filter((g) => series.includes(g)).map((g) => h('span', null, h('i', { class: 's-' + g }), PROG[g]))) : null, h('div', { class: 'ov-cols ov-attser' }, cols.map((d, i) => {
+      const bar = h('span', { class: 'ov-col s-' + d.series, style: '--h:' + ((d.total / top) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 25 + 'ms' : '') });
       const lab = i === 0 || cols[i - 1].ymd.slice(5, 7) !== d.ymd.slice(5, 7) ? fmtShort(d.t) : String(Number(d.ymd.slice(8)));
       const w = h('div', { class: 'ov-colwrap static', tabindex: '0', 'aria-label': PROG[d.series] + ' ' + fmtShort(d.t) + ': ' + d.total + ' people' },
-        h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, String(d.total)), bar), h('span', { class: 'ov-coln' }, lab), S.atProg === 'all' ? h('span', { class: 'ov-coln at-ser' }, PROG_S[d.series]) : null);
+        h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, String(d.total)), bar), h('span', { class: 'ov-coln' }, lab), S.atProg === 'all' ? h('span', { class: 'ov-coln at-ser s-' + d.series }, PROG_S[d.series]) : null);
       const kc = { btw: 0, legacy: 0, guest: 0 };
       for (const key of d.came.keys()) { const p = D.attIdx.people.find((x) => x.key === key); if (p) kc[p.kind === 'btw' ? 'btw' : p.kind === 'legacy' ? 'legacy' : 'guest']++; }
       const tip = (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, PROG[d.series] + ' · ' + new Date(d.t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })), h('span', null, d.total + ' people · ' + (d.mins || '?') + ' min'), h('span', { class: 'muted' }, kc.btw + ' BTW members · ' + kc.legacy + ' Legacy clients · ' + kc.guest + ' others' + (d.devices ? ' · ' + d.devices + ' unnamed devices' : ''))]);
