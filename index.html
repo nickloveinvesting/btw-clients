@@ -244,7 +244,7 @@ button.file { width: 100%; text-align: left; cursor: pointer; color: var(--ink);
 button.file.opened { border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
 .linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
 .linkbtn:hover { color: var(--ok); }
-.file .ext { flex: none; width: 38px; height: 38px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; color: var(--ink-2); }
+.file .ext { flex: none; width: 38px; height: 38px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-size: 11px; font-weight: 700; letter-spacing: .03em; color: var(--ink-2); }
 .file .fn { min-width: 0; }
 .file .fn b { display: block; font-weight: 500; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file .fn small { color: var(--muted); font-size: 12px; }
@@ -321,7 +321,7 @@ a.file.opened { border-color: color-mix(in srgb, var(--ok) 35%, var(--line)); }
 .viewer[open] { display: flex; flex-direction: column; }
 .viewer::backdrop { background: rgba(12, 14, 12, .5); }
 .vhd { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--line); }
-.vhd .ext { flex: none; width: 38px; height: 38px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: var(--ink-2); }
+.vhd .ext { flex: none; width: 38px; height: 38px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--ink-2); }
 .vhd .vt { min-width: 0; flex: 1; }
 .vhd .vt b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vhd .vt small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -520,7 +520,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   /* Header */
   .side { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "logo foot" "coh coh"; align-items: center; gap: 10px 12px; padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
   .logo { grid-area: logo; padding: 0; gap: 9px; min-width: 0; }
-  .mark { width: 32px; height: 32px; border-radius: 9px; font-size: 10px; }
+  .mark { width: 32px; height: 32px; border-radius: 9px; font-size: 11px; }
   .logo b { font-size: 16px; white-space: nowrap; }
   .logo div span { display: none; }
   .navgroup.coh-group { grid-area: coh; }
@@ -661,7 +661,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   .legend { padding: 0 16px 10px; }
   .mapwrap { margin: 0 12px 12px; max-height: 70vh; -webkit-overflow-scrolling: touch; }
   .map { min-width: 720px; }
-  .map thead tr.lessons th { font-size: 10.5px; }
+  .map thead tr.lessons th { font-size: 11px; }
   .map col:first-child { width: 112px !important; }
   .map col:last-child { width: 52px !important; }
   .map .namecol { padding-left: 10px; font-size: 12.5px; }
@@ -785,7 +785,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   .ov-cols { min-height: 190px; gap: 3px; }
   .ov-colwrap .av { display: none; }
   .navgroup.views { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
-  .nav { font-size: 10.5px !important; }
+  .nav { font-size: 11px !important; }
   .nl-long { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ov-anim * { animation: none !important; } }
