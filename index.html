@@ -826,11 +826,41 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   .ov-body { padding: 4px 14px 14px; }
   .ov-cols { min-height: 190px; gap: 3px; }
   .ov-colwrap .av { display: none; }
-  .navgroup.views { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  .navgroup.views { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
   .nav { font-size: 11px !important; }
   .nl-long { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ov-anim * { animation: none !important; } }
+#view-deals { display: flex; flex-direction: column; gap: 14px; }
+#view-deals[hidden] { display: none; }
+.dl-tools { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.dl-row1 { grid-template-columns: minmax(0, 1fr) 380px; }
+.dl-row2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dl-row2 .ov-funnel { gap: 12px; }
+.dl-row2 .ov-ftrack { height: 10px; border-radius: 5px; }
+.dl-row2 .ov-ffill, .dl-row2 .ov-ffill.accent { border-radius: 5px; background: var(--chart); }
+.dl-row2 .ov-frow { margin-bottom: 5px; }
+.dl-tablecard .chead { align-items: center; }
+.dl-tablecard input[type=search] { max-width: 280px; }
+.dl-tablecard .tablebox { padding: 0 6px 6px; }
+#deals-list table { width: 100%; border-collapse: collapse; }
+#deals-list td, #deals-list th { white-space: nowrap; }
+#deals-list td.c-prop, #deals-list td.c-who { white-space: normal; min-width: 150px; }
+#deals-list td.c-strat { white-space: normal; min-width: 120px; max-width: 220px; }
+#deals-list td.c-prop b, #deals-list td.c-who b { display: block; font-weight: 600; }
+#deals-list td small { display: block; color: var(--muted); font-size: 12px; }
+#deals-list .num { font-variant-numeric: tabular-nums; text-align: right; }
+#deals-list tr.detail td { white-space: normal; background: var(--soft); padding: 14px; }
+#deals-list tr.detail .deals { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+.dl-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--chart-wash); color: var(--ink-2); font-size: 11px; font-weight: 600; vertical-align: 1px; }
+.dl-tag.mm { background: var(--soft); }
+.dl-yes { color: var(--ok); font-weight: 600; } .dl-no { color: var(--muted); }
+.dl-cnt { text-align: right; } .dl-cnt b { display: block; font-size: 18px; font-weight: 600; } .dl-cnt small { color: var(--muted); font-size: 12px; }
+.dl-open { margin-top: 10px; }
+.dl-plist .ov-prow { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 1500px) { #deals-list .hide-mid { display: none; } }
+@media (max-width: 1180px) { .dl-row1, .dl-row2 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .dl-tools { width: 100%; } .dl-tools .seg { width: 100%; } #dl-who { grid-template-columns: 1fr 1fr; } .dl-tablecard .chead { flex-direction: column; align-items: stretch; gap: 10px; } .dl-tablecard input[type=search] { max-width: none; } }
 </style>
 
 </head><body><div class="shell">
@@ -844,6 +874,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       <a class="nav" href="#overview" data-view="overview" id="nav-overview"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>Overview</a>
       <a class="nav" href="#grade" data-view="grade" id="nav-grade"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Grading<span class="nl-long"> queue</span></span><span class="ncount" id="n-grade">0</span></a>
       <a class="nav" href="#members" data-view="members" id="nav-members"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Members<span class="ncount" id="n-members">0</span></a>
+      <a class="nav" href="#deals" data-view="deals" id="nav-deals"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Deals<span class="ncount" id="n-deals">0</span></a>
       <a class="nav" href="#lessons" data-view="lessons" id="nav-lessons"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Lessons<span class="ncount" id="n-lessons">0</span></a>
       <a class="nav" href="#uploads" data-view="uploads" id="nav-uploads"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Uploads<span class="ncount" id="n-uploads">0</span></a>
     </nav>
@@ -1020,6 +1051,46 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       <div class="card tablebox" id="members-list"><div class="empty">Loading members…</div></div>
     </section>
 
+    <section class="view" id="view-deals" aria-labelledby="deals-h" hidden>
+      <div class="vhead ov-head">
+        <div>
+          <h1 id="deals-h">Deals</h1>
+          <p id="dl-sub">Loading the Mastermind deal form…</p>
+        </div>
+        <div class="tools dl-tools">
+          <div class="seg" role="group" aria-label="Whose deals" id="dl-who">
+            <button type="button" data-w="all" aria-pressed="true">All clients</button>
+            <button type="button" data-w="btw" aria-pressed="false">Built to Win</button>
+          </div>
+          <div class="seg" role="group" aria-label="Period" id="dl-period">
+            <button type="button" data-p="7" aria-pressed="false">7 days</button>
+            <button type="button" data-p="30" aria-pressed="false">30 days</button>
+            <button type="button" data-p="0" aria-pressed="true">All time</button>
+          </div>
+        </div>
+      </div>
+      <div class="ov-kpis" id="dl-kpis" aria-label="Deal totals"></div>
+      <div class="ov-row dl-row1">
+        <section class="card" aria-labelledby="dl-weeks-h">
+          <div class="chead"><div><h2 id="dl-weeks-h">Deals per week</h2><p id="dl-weeks-sub">Every submission, by the week it came in</p></div><div class="ov-big"><span id="dl-weeks-total">0</span><small>deals all time</small></div></div>
+          <div class="ov-body" id="dl-weeks"></div>
+        </section>
+        <section class="card" aria-labelledby="dl-top-h">
+          <div class="chead"><div><h2 id="dl-top-h">Top submitters</h2><p id="dl-top-sub">Clients with the most deals</p></div></div>
+          <div class="ov-body" id="dl-top"></div>
+        </section>
+      </div>
+      <div class="ov-row dl-row2">
+        <section class="card" aria-labelledby="dl-strat-h"><div class="chead"><div><h2 id="dl-strat-h">Exit strategy</h2><p>What the client plans to do with it</p></div></div><div class="ov-body" id="dl-strat"></div></section>
+        <section class="card" aria-labelledby="dl-src-h"><div class="chead"><div><h2 id="dl-src-h">Lead source</h2><p>How the client found the property</p></div></div><div class="ov-body" id="dl-src"></div></section>
+        <section class="card" aria-labelledby="dl-dist-h"><div class="chead"><div><h2 id="dl-dist-h">Distress signals</h2><p>Why the seller may take an offer</p></div></div><div class="ov-body" id="dl-dist"></div></section>
+      </div>
+      <section class="card dl-tablecard" aria-labelledby="dl-list-h">
+        <div class="chead"><div><h2 id="dl-list-h">All deals</h2><p id="dl-list-sub">Newest first. Open a deal for every answer on the form.</p></div><input type="search" id="dl-search" placeholder="Filter address, city or client" aria-label="Filter deals"></div>
+        <div class="tablebox" id="deals-list"><div class="empty">Loading deals…</div></div>
+      </section>
+    </section>
+
     <section class="view" id="view-lessons" aria-labelledby="lessons-h" hidden>
       <div class="vhead">
         <div>
@@ -1097,7 +1168,8 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     rollup: new Map(), enroll: new Map(), enrollOk: false, times: new Map(), catProg: new Map(), onb: [], deals: [], onbOk: false, dealsOk: false, att: null, attOk: false, attIdx: null, extErr: {},
     err: {}, drafts: {}, opened: new Set(), mirror: new Map(), sel: null, openMember: null, openGrade: null,
     mSearch: '', uSearch: '', uFilter: '',
-    sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' } },
+    sort: { members: { key: 'progress', dir: 'desc' }, uploads: { key: 'turnedIn', dir: 'desc' }, deals: { key: 'at', dir: 'desc' } },
+    dlPeriod: 0, dlWho: 'all', dlSearch: '', openDeal: null, dlAnimKey: '',
   };
 
   // ---------- helpers ----------
@@ -1320,7 +1392,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       for (const sub of got) {
         const o = sub.others || {};
         const g = (k) => { const v = o[F[k]]; return Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v)).trim(); };
-        out.push({ id: sub.id, contactId: sub.contactId, email: String(sub.email || '').toLowerCase(), at: sub.createdAt, address: g('address'), city: g('city'), zip: g('zip'), source: g('source'), owner: g('owner'), contacted: g('contacted'), why: g('why'), distress: g('distress'), opportunity: g('opportunity'), arv: g('arv'), arvSource: g('arvSource'), rehab: g('rehab'), strategy: g('strategy'), ceiling: g('ceiling'), notes: g('notes') });
+        out.push({ id: sub.id, contactId: sub.contactId, name: String(sub.name || (sub.others && sub.others.full_name) || '').trim(), email: String(sub.email || '').toLowerCase(), at: sub.createdAt, address: g('address'), city: g('city'), zip: g('zip'), source: g('source'), owner: g('owner'), contacted: g('contacted'), why: g('why'), distress: g('distress'), opportunity: g('opportunity'), arv: g('arv'), arvSource: g('arvSource'), rehab: g('rehab'), strategy: g('strategy'), ceiling: g('ceiling'), notes: g('notes') });
       }
       if (!got.length || !(d.meta && d.meta.nextPage)) break;
     }
@@ -1768,7 +1840,13 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const deals = [];
     for (const m of byMember) for (const dl of m.deals) deals.push(Object.assign({ member: m }, dl));
     deals.sort((a, b) => String(b.at).localeCompare(String(a.at)));
-    return { attIdx: aIdx, deals, members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
+    // Every deal on the form (all clients, not just this cohort). Team test submissions are left out.
+    const rosterById = new Map(S.roster.map((r) => [r.contactId, r])), rosterByEmail = new Map(S.roster.filter((r) => r.email).map((r) => [r.email.toLowerCase(), r]));
+    const allDeals = S.deals.filter((dl) => !/@theunshakableinvestor\.com$/.test(dl.email)).map((dl) => {
+      const r = rosterById.get(dl.contactId) || rosterByEmail.get(dl.email) || null;
+      return Object.assign({}, dl, { who: r, name: titleName((r && r.name) || dl.name || dl.email || 'Unknown client'), key: (r && r.contactId) || dl.contactId || dl.email, arvN: moneyNum(dl.arv), ceilN: moneyNum(dl.ceiling), rehabN: moneyNum(dl.rehab) });
+    }).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    return { allDeals, attIdx: aIdx, deals, members: byMember, memberById, latest, files, queue, lessonStats, doneByLesson, days, follow, events, uploads, fileList, assignments, timeOf };
   }
 
   // ---------- grader ----------
@@ -2351,6 +2429,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     renderLessons();
     renderUploads();
     renderOverview();
+    renderDeals();
   }
   function renderShell() {
     const counts = new Map();
@@ -2368,6 +2447,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     const sel = $('#coh-select');
     sel.replaceChildren(...opts.map((o) => { const op = h('option', { value: o.v }, o.label + (S.roster.length ? ' (' + o.n + ')' : '')); if (o.v === S.cohort) op.selected = true; return op; }));
     $('#n-uploads').textContent = fmtInt(D.uploads.length);
+    $('#n-deals').textContent = S.dealsOk ? fmtInt(D.allDeals.length) : '';
   }
 
   function renderHome() {
@@ -2563,7 +2643,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       h('button', { type: 'button', onclick: () => {
         if (st.key === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
         else { st.key = key; st.dir = (key === 'name' || key === 'lesson') ? 'asc' : 'desc'; }
-        if (table === 'members') renderMembers(); else renderUploads();
+        if (table === 'members') renderMembers(); else if (table === 'deals') renderDealTable(dealScope()); else renderUploads();
       } }, label));
   }
 
@@ -3053,6 +3133,176 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       h('span', { class: 'ov-pn' }, h('b', null, dl.address || 'No address given'), h('small', null, dl.member.name + ' · ' + [dl.city, dl.zip].filter(Boolean).join(' ') + (dl.strategy ? ' · ' + dl.strategy.toLowerCase() : ''))),
       h('span', { class: 'ov-dnum' }, h('b', null, dl.ceiling ? moneyish(dl.ceiling) : '—'), h('small', null, 'ceiling · ' + ago(dl.at) + ' ago')))))));
   }
+  // ---------- deals ----------
+  // "180,000-210,000" -> 180000 (low end), "750-900K" -> 750000, "$1.45M" -> 1450000, "none" -> null.
+  // First money figure in a free-text answer: "180, 000-210,000" -> 180000 (low end of a range), "750-900K" -> 750000,
+  // "$1.45M" -> 1450000, "$139,000 end-buyer MAO ($310K x 70% ...)" -> 139000, "none" -> null.
+  function moneyNum(v) {
+    const t = String(v || '').toLowerCase().replace(/(\d),\s+(\d{3})/g, '$1,$2');
+    const m = /(\d[\d,]*(?:\.\d+)?)\s*([km])?(?![a-z])/.exec(t);
+    if (!m) return null;
+    const n = parseFloat(m[1].replace(/,/g, ''));
+    if (!isFinite(n)) return null;
+    let suf = m[2];
+    if (!suf) { const r = /^\s*[-–]\s*\$?\s*[\d.,]+\s*([km])(?![a-z])/.exec(t.slice(m.index + m[0].length)); if (r) suf = r[1]; }
+    const val = n * (suf === 'm' ? 1e6 : suf === 'k' ? 1e3 : 1);
+    return val >= 1000 ? val : null;
+  }
+  const money0 = (n) => n == null ? '—' : '$' + (n >= 1e6 ? (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'k' : Math.round(n).toLocaleString('en-US'));
+  const median = (arr) => { const a = arr.filter((x) => x != null).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+  function titleName(v) { const t = String(v).trim(); return t === t.toUpperCase() || t === t.toLowerCase() ? t.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()) : t; }
+  const tagsOf = (v) => String(v || '').split(/,\s*/).map((x) => x.trim()).filter((x) => x && !/^(n\/?a|none)$/i.test(x));
+  const tagLabel = (x) => { const t = x.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\bAi\b/, 'AI'); return t.replace(/ & /g, ' & '); };
+  function dealScope() {
+    const P = S.dlPeriod, now = Date.now(), since = P ? now - P * 86400000 : 0;
+    const who = (dl) => S.dlWho === 'all' || (dl.who && (S.cohort === 'all' || dl.who.cohort === S.cohort));
+    const base = D.allDeals.filter(who);
+    const inP = base.filter((dl) => new Date(dl.at).getTime() >= since);
+    const prev = P ? base.filter((dl) => { const t = new Date(dl.at).getTime(); return t >= since - P * 86400000 && t < since; }) : [];
+    return { P, since, base, inP, prev };
+  }
+  function openMemberAny(contactId) {
+    if (!D.memberById.has(contactId)) { S.cohort = 'all'; renderAll(); }
+    openMember(contactId);
+  }
+  function renderDeals() {
+    const view = $('#view-deals');
+    if (!view || view.hidden || !D) return;
+    for (const b of document.querySelectorAll('#dl-period button')) b.setAttribute('aria-pressed', String(Number(b.dataset.p) === S.dlPeriod));
+    for (const b of document.querySelectorAll('#dl-who button')) b.setAttribute('aria-pressed', String(b.dataset.w === S.dlWho));
+    $('#dl-who button[data-w="btw"]').textContent = S.cohort === 'all' ? 'Built to Win' : 'Cohort ' + S.cohort.slice(1);
+    if (!S.dealsOk) {
+      const msg = S.extErr.deals ? 'The Mastermind deal form didn’t load. ' + S.extErr.deals : 'Loading the Mastermind deal form…';
+      $('#dl-sub').textContent = msg;
+      for (const id of ['#dl-kpis', '#dl-weeks', '#dl-top', '#dl-strat', '#dl-src', '#dl-dist']) $(id).replaceChildren();
+      $('#deals-list').replaceChildren(h('div', { class: S.extErr.deals ? 'sect-err' : 'empty' }, msg));
+      return;
+    }
+    const X = dealScope();
+    const key = S.dlWho + '|' + S.dlPeriod + '|' + S.cohort + '|' + D.allDeals.length;
+    const animate = key !== S.dlAnimKey;
+    S.dlAnimKey = key;
+    view.classList.toggle('ov-anim', animate && !reduceMotion());
+    const people = new Set(D.allDeals.map((d) => d.key));
+    const btwPeople = new Set(D.allDeals.filter((d) => d.who).map((d) => d.key));
+    $('#dl-sub').textContent = fmtInt(D.allDeals.length) + ' deals from ' + fmtInt(people.size) + ' clients on the Mastermind deal form · ' + fmtInt(btwPeople.size) + ' of them in Built to Win' + (S.loadedAt ? ' · updated ' + S.loadedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '');
+    $('#n-deals').textContent = fmtInt(D.allDeals.length);
+    renderDealKpis(X, animate);
+    renderDealWeeks(X, animate);
+    renderDealTop(X);
+    renderDealBars('#dl-strat', X.inP, (d) => tagsOf(d.strategy), animate);
+    renderDealBars('#dl-src', X.inP, (d) => tagsOf(d.source), animate);
+    renderDealBars('#dl-dist', X.inP, (d) => tagsOf(d.distress), animate);
+    renderDealTable(X);
+  }
+  function renderDealKpis(X, animate) {
+    const per = X.P ? 'last ' + X.P + ' days' : 'all time';
+    const tile = (label, val, fmt, sub, delta, extra) => { const v = h('div', { class: 'ov-val' }); countUp(v, val, fmt, animate); return h('article', { class: 'ov-kpi' }, h('div', { class: 'ov-kl' }, label), v, h('div', { class: 'ov-ks' }, sub), delta, extra || null); };
+    const days = []; const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+    for (let i = 13; i >= 0; i--) { const d = new Date(t0); d.setDate(d.getDate() - i); days.push({ s: d.getTime(), n: 0 }); }
+    for (const dl of X.base) { const t = new Date(dl.at).getTime(); for (let i = days.length - 1; i >= 0; i--) if (t >= days[i].s) { if (i < days.length - 1 || t < days[i].s + 86400000) days[i].n++; break; } }
+    const spark = (vals) => { const w = 120, hh = 28, mx = Math.max(1, ...vals), n = vals.length; const sv = svgEl('svg', { viewBox: '0 0 ' + w + ' ' + hh, class: 'ov-spark', 'aria-hidden': 'true', preserveAspectRatio: 'none' }); sv.append(svgEl('path', { d: monotonePath(vals.map((v, i) => [(i / (n - 1)) * w, hh - 2 - (v / mx) * (hh - 6)])), class: 'ov-spark-line' })); return sv; };
+    const who = new Set(X.inP.map((d) => d.key)), whoPrev = new Set(X.prev.map((d) => d.key));
+    const firstAt = new Map(); for (const d of X.base) { const f = firstAt.get(d.key); if (!f || d.at < f) firstAt.set(d.key, d.at); }
+    const firstTimers = [...who].filter((k) => new Date(firstAt.get(k)).getTime() >= X.since).length;
+    const yes = X.inP.filter((d) => /^y/i.test(d.contacted)).length;
+    const ceil = median(X.inP.map((d) => d.ceilN)), arv = median(X.inP.map((d) => d.arvN));
+    const nCeil = X.inP.filter((d) => d.ceilN != null).length;
+    $('#dl-kpis').replaceChildren(
+      tile('Deals submitted', X.inP.length, (x) => fmtInt(Math.round(x)), per, deltaNode(X.inP.length, X.prev.length, X.P), spark(days.map((d) => d.n))),
+      tile('Clients submitting', who.size, (x) => fmtInt(Math.round(x)), X.P ? fmtInt(firstTimers) + ' submitted for the first time' : 'avg ' + (who.size ? (X.inP.length / who.size).toFixed(1) : '0') + ' deals each', deltaNode(who.size, whoPrev.size, X.P)),
+      tile('Seller contacted', X.inP.length ? (yes / X.inP.length) * 100 : 0, (x) => Math.round(x) + '%', fmtInt(yes) + ' of ' + fmtInt(X.inP.length) + ' deals had a seller conversation', h('span', { class: 'ov-delta flat' }, per)),
+      tile('Median max offer', ceil || 0, (x) => (ceil == null ? '—' : money0(x)), nCeil ? 'from ' + nCeil + ' deals with a number · median ARV ' + money0(arv) : 'no numeric offers yet', h('span', { class: 'ov-delta flat' }, per)));
+  }
+  function renderDealWeeks(X, animate) {
+    const host = $('#dl-weeks');
+    const wk = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getTime(); };
+    const list = X.base;
+    $('#dl-weeks-total').textContent = fmtInt(list.length);
+    if (!list.length) { host.replaceChildren(h('p', { class: 'muted' }, 'No deals yet.')); return; }
+    const first = wk(Math.min(...list.map((d) => new Date(d.at).getTime()))), last = wk(Date.now());
+    const weeks = [];
+    for (let t = first; t <= last; t += 7 * 86400000) weeks.push({ t: wk(t + 3600000), list: [] });
+    for (const d of list) { const w = weeks.find((x) => x.t === wk(d.at)); if (w) w.list.push(d); }
+    const top = Math.max(1, ...weeks.map((w) => w.list.length));
+    const best = weeks.reduce((a, b) => (b.list.length > a.list.length ? b : a));
+    $('#dl-weeks-sub').textContent = 'Every submission by week (weeks start Monday) · best week ' + fmtShort(best.t) + ' with ' + best.list.length;
+    host.replaceChildren(h('div', { class: 'ov-cols ov-stallcols' }, weeks.map((w, i) => {
+      const bar = h('span', { class: 'ov-col', style: '--h:' + ((w.list.length / top) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 50 + 'ms' : '') });
+      const box = h('div', { class: 'ov-colwrap static', tabindex: '0', 'aria-label': 'Week of ' + fmtShort(w.t) + ': ' + w.list.length + ' deals' },
+        h('span', { class: 'ov-colbox' }, h('span', { class: 'ov-colv' }, String(w.list.length)), bar), h('span', { class: 'ov-coln' }, fmtShort(w.t)));
+      const names = [...new Set(w.list.map((d) => d.name))];
+      const tip = (ev) => ovTip.show(ev.clientX, ev.clientY, [h('b', null, 'Week of ' + fmtShort(w.t)), h('span', null, w.list.length + (w.list.length === 1 ? ' deal' : ' deals') + ' from ' + names.length + (names.length === 1 ? ' client' : ' clients')), h('span', { class: 'muted' }, names.slice(0, 4).join(', ') + (names.length > 4 ? ' +' + (names.length - 4) : ''))]);
+      box.addEventListener('pointermove', tip); box.addEventListener('pointerleave', () => ovTip.hide());
+      return box;
+    })));
+  }
+  function renderDealTop(X) {
+    const by = new Map();
+    for (const d of X.inP) { const e = by.get(d.key) || { d, n: 0, last: d.at }; e.n++; if (d.at > e.last) e.last = d.at; by.set(d.key, e); }
+    const list = [...by.values()].sort((a, b) => b.n - a.n || String(b.last).localeCompare(String(a.last))).slice(0, 7);
+    $('#dl-top-sub').textContent = fmtInt(by.size) + (by.size === 1 ? ' client' : ' clients') + ', ' + (S.dlPeriod ? 'last ' + S.dlPeriod + ' days' : 'all time');
+    if (!list.length) { $('#dl-top').replaceChildren(h('p', { class: 'muted' }, 'No deals in this period.')); return; }
+    $('#dl-top').replaceChildren(h('ul', { class: 'ov-plist' }, list.map((e) => h('li', null, h('button', { type: 'button', class: 'ov-prow', onclick: () => { if (e.d.who) openMemberAny(e.d.who.contactId); else { S.dlSearch = e.d.name; $('#dl-search').value = e.d.name; renderDealTable(dealScope()); $('#dl-list-h').scrollIntoView({ behavior: 'smooth', block: 'start' }); } } },
+      avatar(e.d.name),
+      h('span', { class: 'ov-pn' }, h('b', null, e.d.name), h('small', null, (e.d.who ? 'Built to Win · Cohort ' + e.d.who.cohort.slice(1) : 'Mastermind client') + ' · last ' + ago(e.last) + ' ago')),
+      h('span', { class: 'dl-cnt' }, h('b', null, fmtInt(e.n)), h('small', null, e.n === 1 ? 'deal' : 'deals')))))));
+  }
+  function renderDealBars(sel, list, pick, animate) {
+    const c = new Map();
+    for (const d of list) for (const t of new Set(pick(d).map(tagLabel))) c.set(t, (c.get(t) || 0) + 1);
+    const rows = [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+    if (!rows.length) { $(sel).replaceChildren(h('p', { class: 'muted' }, 'No answers in this period.')); return; }
+    const n = Math.max(1, list.length);
+    $(sel).replaceChildren(h('ol', { class: 'ov-funnel' }, rows.map(([label, v], i) => {
+      const fill = h('span', { class: 'ov-ffill', style: '--w:' + ((v / n) * 100).toFixed(1) + '%;' + (animate && !reduceMotion() ? 'animation-delay:' + i * 70 + 'ms' : '') });
+      return h('li', null, h('div', { class: 'ov-frow' }, h('span', null, label), h('b', null, fmtInt(v), h('small', null, ' · ' + Math.round((v / n) * 100) + '%'))), h('span', { class: 'ov-ftrack' }, fill));
+    })), c.size > 6 ? h('p', { class: 'ov-foot muted' }, '+' + (c.size - 6) + ' more answers. Clients can pick more than one, so shares add up past 100%.') : h('p', { class: 'ov-foot muted' }, 'Share of deals. Clients can pick more than one.'));
+  }
+  function renderDealTable(X) {
+    const box = $('#deals-list');
+    const q = S.dlSearch.trim().toLowerCase();
+    let rows = X.inP.filter((d) => !q || [d.address, d.city, d.zip, d.name, d.email].join(' ').toLowerCase().includes(q));
+    rows = sortRows(rows, S.sort.deals, { at: (d) => d.at, address: (d) => (d.address || '').toLowerCase(), name: (d) => d.name.toLowerCase(), strategy: (d) => (d.strategy || '').toLowerCase(), arv: (d) => d.arvN, rehab: (d) => d.rehabN, ceiling: (d) => d.ceilN, contacted: (d) => (/^y/i.test(d.contacted) ? 1 : 0) });
+    $('#dl-list-sub').textContent = fmtInt(rows.length) + (rows.length === 1 ? ' deal' : ' deals') + (q ? ' matching “' + S.dlSearch.trim() + '”' : '') + '. Open a deal for every answer on the form.';
+    if (!rows.length) { box.replaceChildren(h('div', { class: 'empty' }, q ? 'No deals match “' + S.dlSearch.trim() + '”.' : 'No deals in this period.')); return; }
+    const detail = (d) => h('div', null, dealCards([d]), d.who ? h('button', { type: 'button', class: 'btn small dl-open', onclick: (e) => { e.stopPropagation(); openMemberAny(d.who.contactId); } }, 'Open ' + d.name.split(' ')[0] + '’s member page') : null);
+    const toggle = (d) => { S.openDeal = S.openDeal === d.id ? null : d.id; renderDealTable(dealScope()); };
+    const who = (d) => h('td', { class: 'c-who' }, h('b', null, d.name, d.who ? h('span', { class: 'dl-tag' }, 'C' + d.who.cohort.slice(1)) : h('span', { class: 'dl-tag mm' }, 'Mastermind')), h('small', null, d.email || ''));
+    if (isPhone()) {
+      box.replaceChildren(h('ul', { class: 'ov-plist dl-plist' }, rows.map((d) => h('li', null,
+        h('button', { type: 'button', class: 'ov-prow', 'aria-expanded': String(S.openDeal === d.id), onclick: () => toggle(d) },
+          h('span', { class: 'ov-pn' }, h('b', null, d.address || 'No address given'), h('small', null, d.name + ' · ' + [d.city, d.zip].filter(Boolean).join(' ') + ' · ' + fmtShort(d.at))),
+          h('span', { class: 'ov-dnum' }, h('b', null, money0(d.ceilN)), h('small', null, 'max offer'))),
+        S.openDeal === d.id ? detail(d) : null))));
+      return;
+    }
+    const tbody = h('tbody');
+    for (const d of rows) {
+      const open = S.openDeal === d.id;
+      const tr = h('tr', { class: 'click' + (open ? ' open' : ''), tabindex: '0', 'aria-expanded': String(open) });
+      tr.addEventListener('click', () => toggle(d));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(d); } });
+      tr.append(
+        h('td', null, fmtShort(d.at), h('small', null, ago(d.at) + ' ago')),
+        h('td', { class: 'c-prop' }, h('b', null, d.address || 'No address given'), h('small', null, [d.city, d.zip].filter(Boolean).join(' '))),
+        who(d),
+        h('td', { class: 'c-strat' }, tagsOf(d.strategy).map(tagLabel).join(', ') || '—'),
+        h('td', { class: 'num', title: d.arv || '' }, money0(d.arvN)),
+        h('td', { class: 'num hide-mid', title: d.rehab || '' }, money0(d.rehabN)),
+        h('td', { class: 'num', title: d.ceiling || '' }, h('b', null, money0(d.ceilN))),
+        h('td', { class: 'hide-mid' }, /^y/i.test(d.contacted) ? h('span', { class: 'dl-yes' }, 'Yes') : h('span', { class: 'dl-no' }, d.contacted ? 'No' : '—')));
+      tbody.append(tr);
+      if (open) tbody.append(h('tr', { class: 'detail' }, h('td', { colspan: '8' }, detail(d))));
+    }
+    box.replaceChildren(h('table', null, h('thead', null, h('tr', null,
+      headCell('deals', 'at', 'Submitted'), headCell('deals', 'address', 'Property'), headCell('deals', 'name', 'Client'), headCell('deals', 'strategy', 'Strategy'),
+      headCell('deals', 'arv', 'ARV', 'num'), headCell('deals', 'rehab', 'Rehab', 'num hide-mid'), headCell('deals', 'ceiling', 'Max offer', 'num'), headCell('deals', 'contacted', 'Seller contacted', 'hide-mid'))), tbody));
+  }
+  for (const b of document.querySelectorAll('#dl-period button')) b.addEventListener('click', () => { S.dlPeriod = Number(b.dataset.p); renderDeals(); });
+  for (const b of document.querySelectorAll('#dl-who button')) b.addEventListener('click', () => { S.dlWho = b.dataset.w; renderDeals(); });
+  $('#dl-search').addEventListener('input', (e) => { S.dlSearch = e.target.value; if (D && S.dealsOk) renderDealTable(dealScope()); });
+
   // Members type these as free text ("80,200", "$95k", "undetermined"); show numbers as money, leave words as written.
   function moneyish(v) {
     const t = String(v).trim();
@@ -3209,7 +3459,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
   if (window.ResizeObserver) { let rt = 0, lastW = 0; new ResizeObserver((es) => { const w = Math.round(es[0].contentRect.width); if (Math.abs(w - lastW) < 8) return; lastW = w; clearTimeout(rt); rt = setTimeout(() => { const k = S.ovAnimKey; renderOverview(); S.ovAnimKey = k; }, 120); }).observe($('#view-overview')); }
 
   // ---------- views & controls ----------
-  const VIEWS = ['overview', 'grade', 'members', 'lessons', 'uploads'];
+  const VIEWS = ['overview', 'grade', 'members', 'deals', 'lessons', 'uploads'];
   function show(view, push) {
     if (!VIEWS.includes(view)) view = 'overview';
     S.view = view;
@@ -3221,6 +3471,7 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
     if (view !== 'grade' && S.sheet) { S.sheet = false; if (D) renderInbox(); }
     syncSheet();
     if (view === 'overview') renderOverview();
+    if (view === 'deals') renderDeals();
     if (push && location.hash !== '#' + view) { try { history.replaceState(null, '', '#' + view); } catch (_) { /* hash only */ } }
   }
   for (const a of document.querySelectorAll('.nav')) a.addEventListener('click', (e) => { e.preventDefault(); show(a.dataset.view, true); window.scrollTo({ top: 0 }); });
