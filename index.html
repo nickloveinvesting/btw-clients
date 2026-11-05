@@ -2106,6 +2106,17 @@ button.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
       } else if (ok) {
         S.assess = S.assess.map((a) => (a.id === id ? Object.assign({}, a, { status: want, score: body.score, feedback: body.feedback }) : a));
       }
+      if (ok) {
+        // Older tries of the same homework stay "waiting" in GoHighLevel's own review list unless they get the same grade.
+        const me = S.assess.find((a) => a.id === id) || rec;
+        const older = S.assess.filter((a) => a.id !== id && a.contactId === me.contactId && a.lessonId === me.lessonId && a.status === 'processing' && (Number(a.attempt) || 1) < (Number(me.attempt) || 1));
+        for (const o of older) {
+          try {
+            await ghl('review-assessment', { path: { productId: CFG.product, assessmentId: o.id }, body }, 'Close earlier try of ' + ctx.lessonShort, { write: true, idempotencyKey: 'grade-' + o.id + '-' + Date.now() });
+            S.assess = S.assess.map((a) => (a.id === o.id ? Object.assign({}, a, { status: want, score: body.score, feedback: body.feedback }) : a));
+          } catch (_) { /* the latest try saved; an earlier one can be closed on the next grade */ }
+        }
+      }
       busy = false;
       if (ok) {
         delete S.drafts[id];
